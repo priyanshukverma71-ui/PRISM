@@ -173,3 +173,55 @@
     0 4px 16px rgba(255, 255, 255, 0.25),
     0 1px 3px rgba(0, 0, 0, 0.4);
 }
+
+/* Circular Pop Button for PRISM Copilot */
+.copilot-circular-pop {
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(25, 30, 40, 0.88) 60%,
+    rgba(10, 13, 18, 0.96) 100%
+  );
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1.5px solid rgba(245, 186, 66, 0.45);
+  box-shadow:
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 3px 0 rgba(0, 0, 0, 0.5),
+    0 10px 30px -4px rgba(0, 0, 0, 0.8),
+    0 0 20px -2px rgba(245, 186, 66, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.copilot-circular-pop:hover {
+  transform: translateY(-2px) scale(1.06);
+  border-color: rgba(245, 186, 66, 0.85);
+  box-shadow:
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.5),
+    0 14px 40px -4px rgba(0, 0, 0, 0.85),
+    0 0 28px 0 rgba(245, 186, 66, 0.45);
+}
+
+.copilot-circular-pop:active {
+  transform: scale(0.96);
+}
+
+/* Minimalist Copilot Floating Card */
+.copilot-pop-card {
+  background: linear-gradient(
+    170deg,
+    rgba(20, 24, 32, 0.96) 0%,
+    rgba(13, 16, 22, 0.98) 50%,
+    rgba(8, 10, 14, 0.99) 100%
+  );
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2),
+    0 24px 70px -8px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(245, 186, 66, 0.15);
+}
