@@ -529,7 +529,7 @@ export function DashboardPage() {
                     </div>
                   ))}
 
-                  {/* High Severity Alerts with 4-Part Structure */}
+                  {/* High Severity Alerts with Actionable Next Steps */}
                   {criticalAlerts.slice(0, 2).map((al: any) => {
                     const alertAnatomy = formatPlainAlert(al);
 
@@ -542,27 +542,42 @@ export function DashboardPage() {
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-gunmetal text-status-critical border border-status-critical/30">
                             {alertAnatomy.urgencyText}
                           </span>
-                          <span className="text-[10px] text-slate-muted">
-                            Level {al.escalationLevel}
-                          </span>
+                          {alertAnatomy.dueDate ? (
+                            <span className="text-[10px] text-status-warning font-medium">
+                              Due: {alertAnatomy.dueDate}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-muted">
+                              Tier {al.escalationLevel}
+                            </span>
+                          )}
                         </div>
 
                         <div>
                           <p className="text-xs font-bold text-silver-bright">{alertAnatomy.issue}</p>
-                          <p className="text-[11px] text-slate-muted mt-1 leading-relaxed">
-                            <span className="text-platinum font-medium">Why it matters: </span>
-                            {alertAnatomy.whyItMatters}
-                          </p>
+                          {alertAnatomy.reason && (
+                            <p className="text-[11px] text-slate-muted mt-1 leading-relaxed">
+                              <span className="text-platinum font-medium">Reason: </span>
+                              {alertAnatomy.reason}
+                            </p>
+                          )}
+                          <div className="mt-1.5 p-2 rounded-lg bg-obsidian border border-graphite-border">
+                            <span className="text-[10px] uppercase font-semibold text-status-warning block">
+                              Next step:
+                            </span>
+                            <p className="text-xs font-medium text-silver-bright mt-0.5">
+                              {alertAnatomy.nextStep}
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="p-2 rounded bg-obsidian border border-graphite-border text-[10px] text-slate-muted flex items-center justify-between">
+                        <div className="text-[10px] text-slate-muted flex items-center justify-between">
                           <span className="truncate max-w-[200px]">Owner: {alertAnatomy.owner}</span>
-                          <span className="text-platinum font-medium">{alertAnatomy.actionLabel}</span>
                         </div>
 
                         <Link
                           to={alertAnatomy.actionUrl}
-                          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-platinum hover:text-white transition-colors w-full border-t border-graphite-border pt-1.5"
+                          className="platinum-button-primary px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5 w-full cursor-pointer"
                         >
                           <span>{alertAnatomy.actionLabel}</span>
                           <ArrowRight size={12} />

@@ -395,44 +395,124 @@ export interface PlainAlertAnatomy {
   urgencyText: string;
   actionUrl: string;
   actionLabel: string;
+  reason?: string;
+  dueDate?: string;
+  nextStep: string;
 }
 
 /**
- * Formats every alert into the 4-part plain language anatomy:
- * 1. The Issue
- * 2. Why it matters
- * 3. Who owns the next step
- * 4. How to resolve it
+ * Formats every alert into plain, action-oriented English:
+ * - What to do (e.g. "This application may miss its deadline. Review the pending verification.")
+ * - The reason (when supported by data)
+ * - Due date (when supported by data)
+ * - Next step (explicit action instructions)
+ * - Who owns the next step
+ * - Why it matters
+ * - How to resolve it
  */
 export function formatPlainAlert(alert: any): PlainAlertAnatomy {
   const institutionName = alert?.application?.institution?.name || 'Institution';
   const appNumber = alert?.application?.applicationNumber || '';
+  const stageName = alert?.application?.currentStage ? formatPlainStage(alert.application.currentStage) : 'review';
 
-  // 1. THE ISSUE
-  let issue = alert?.message || alert?.title || 'Regulatory action required';
-  if (alert?.obligation) {
-    issue = `Mandatory compliance undertaking "${alert.obligation.title}" is deficient or missing evidence for ${institutionName}.`;
-  } else if (alert?.alertType === 'OVERDUE_STAGE') {
-    issue = `Application ${appNumber} (${institutionName}) has exceeded the statutory timeframe in stage "${formatPlainStage(alert.application?.currentStage)}".`;
-  } else if (alert?.alertType === 'EVC_DEADLINE') {
-    issue = `Inspection panel has not been scheduled within the statutory timeframe for ${institutionName}.`;
+  // 1. Due date resolution (when supported by data)
+  let dueDateText: string | undefined = undefined;
+  if (alert?.obligation?.dueDate) {
+    const timing = formatDaysRemaining(alert.obligation.dueDate);
+    const dateFormatted = new Date(alert.obligation.dueDate).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+    dueDateText = `${dateFormatted} (${timing.text})`;
+  } else if (alert?.application?.deadlineDate) {
+    const timing = formatDaysRemaining(alert.application.deadlineDate);
+    const dateFormatted = new Date(alert.application.deadlineDate).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+    dueDateText = `${dateFormatted} (${timing.text})`;
   }
 
-  // 2. WHY IT MATTERS
+  // 2. Issue, Reason, Next Step, and Resolution
+  let issue = 'This application may miss its deadline. Review the pending verification.';
+  let reason = `Statutory review timeframe is approaching cutoff for ${institutionName}.`;
+  let nextStep = 'Review the pending verification and record observation notes to advance the application.';
+  let howToResolve = 'Open the case dossier to inspect submitted evidence and record your stage determination.';
+  let actionUrl = alert?.applicationId ? `/applications/${alert.applicationId}` : '/applications';
+  let actionLabel = 'Review pending verification';
+
+  const alertType = alert?.alertType || '';
+  const rawMsg = (alert?.message || alert?.title || '').toLowerCase();
+
+  if (alert?.obligation || alertType === 'MISSING_EVIDENCE') {
+    const obligTitle = alert?.obligation?.title || 'compliance document';
+    issue = `Mandatory compliance undertaking "${obligTitle}" is deficient. Upload the missing evidence.`;
+    reason = `Required statutory evidence for "${obligTitle}" is missing or unverified for ${institutionName}.`;
+    nextStep = 'Upload the missing signed evidence or renewed municipal certificate before the cutoff date.';
+    howToResolve = 'Submit verified documentary proof in the compliance vault to clear the deficiency.';
+    actionUrl = '/compliance';
+    actionLabel = 'Upload missing evidence';
+  } else if (alertType === 'OVERDUE_STAGE' || rawMsg.includes('overdue')) {
+    issue = appNumber
+      ? `Application ${appNumber} has exceeded its statutory deadline. Review the pending verification immediately.`
+      : 'This application has exceeded its statutory deadline. Review the pending verification immediately.';
+    reason = `Case ${appNumber ? `${appNumber} ` : ''}(${institutionName}) exceeded the statutory timeframe in stage "${stageName}".`;
+    nextStep = 'Review the pending verification in the case dossier and record final stage determination.';
+    howToResolve = 'Open the case dossier to record urgent review observations and advance the stage.';
+    actionUrl = alert?.applicationId ? `/applications/${alert.applicationId}` : '/applications';
+    actionLabel = 'Review pending verification';
+  } else if (
+    alertType === 'DEADLINE_WARNING' ||
+    rawMsg.includes('deadline') ||
+    rawMsg.includes('due in') ||
+    rawMsg.includes('sla')
+  ) {
+    issue = 'This application may miss its deadline. Review the pending verification.';
+    reason = `Application ${appNumber} (${institutionName}) has limited time remaining in stage "${stageName}" before SLA cutoff.`;
+    nextStep = 'Review the pending verification and record observation notes to advance the application.';
+    howToResolve = 'Open the case dossier to inspect submitted evidence and record stage determination.';
+    actionUrl = alert?.applicationId ? `/applications/${alert.applicationId}` : '/applications';
+    actionLabel = 'Review pending verification';
+  } else if (alertType === 'DOCUMENT_EXPIRY' || alertType === 'EXPIRING_DOCUMENT' || rawMsg.includes('expir')) {
+    issue = `Statutory certificate is nearing expiration for ${institutionName}. Submit the renewed document.`;
+    reason = `Expired safety certificates or land leases void statutory institutional recognition under the Approval Process Handbook.`;
+    nextStep = 'Submit renewed statutory certificate in the documents vault to avoid scrutiny hold.';
+    howToResolve = 'Upload renewed municipal clearance certificate or registered deed in the documents vault.';
+    actionUrl = '/documents';
+    actionLabel = 'Upload renewed document';
+  } else if (alertType === 'EVC_UNSCHEDULED' || alertType === 'EVC_DEADLINE' || rawMsg.includes('evc')) {
+    issue = `Inspection panel has not been scheduled within statutory window for ${institutionName}. Appoint the expert committee.`;
+    reason = `Statutory timeframe for physical campus inspection of ${institutionName} is nearing cutoff without confirmed panel.`;
+    nextStep = 'Appoint a 3-member expert inspection panel and confirm the visit date.';
+    howToResolve = 'Open the inspection coordinator to appoint panel experts and set the visit date.';
+    actionUrl = '/evc';
+    actionLabel = 'Schedule inspection';
+  } else {
+    issue = 'This application may miss its deadline. Review the pending verification.';
+    reason = toSentenceCase(alert?.message || alert?.title || 'Statutory review window is expiring.');
+    nextStep = 'Review the pending verification and complete the required action.';
+    howToResolve = 'Inspect the case dossier and record verified resolution notes.';
+    actionUrl = alert?.applicationId ? `/applications/${alert.applicationId}` : '/alerts';
+    actionLabel = 'Review pending verification';
+  }
+
+  // 3. WHY IT MATTERS
   let whyItMatters =
-    'Statutory requirement under the Approval Process Handbook. Delays application processing and risks compliance penalties.';
+    'Statutory requirement under the Approval Process Handbook. Delays application processing and risks administrative penalties.';
   if (alert?.severity === 'CRITICAL') {
     whyItMatters =
-      'Critical regulatory requirement. Prevents approval determination and risks automatic rejection upon deadline cutoff.';
-  } else if (alert?.alertType === 'OVERDUE_STAGE') {
+      'Critical regulatory blocker. Prevents approval determination and risks automatic rejection upon deadline cutoff.';
+  } else if (alertType === 'OVERDUE_STAGE' || rawMsg.includes('overdue')) {
     whyItMatters =
-      'Stage timeline breach. Delays regional inspection and causes cascade delays across the academic calendar.';
-  } else if (alert?.alertType === 'EXPIRING_DOCUMENT') {
+      'Stage timeline breach. Delays regional inspection and causes cascade scheduling delays across the academic calendar.';
+  } else if (alertType === 'DOCUMENT_EXPIRY' || alertType === 'EXPIRING_DOCUMENT') {
     whyItMatters =
-      'Statutory compliance requirement. Expired safety certificates or land leases void legal institutional recognition.';
+      'Statutory compliance requirement. Expired municipal fire clearances or registered land leases void institutional approval.';
   }
 
-  // 3. WHO OWNS THE NEXT STEP
+  // 4. WHO OWNS THE NEXT STEP
   let owner = 'Assigned regulatory officer';
   if (alert?.recipientRole === 'INSTITUTION_USER') {
     owner = `Institution leadership (${institutionName})`;
@@ -444,25 +524,6 @@ export function formatPlainAlert(alert: any): PlainAlertAnatomy {
     owner = 'Inspection committee review panel';
   } else if (alert?.recipientRole === 'SYSTEM_ADMIN') {
     owner = 'System administrator';
-  }
-
-  // 4. HOW TO RESOLVE IT
-  let howToResolve = 'Acknowledge the alert, inspect the relevant case dossier, and record verified resolution notes.';
-  let actionUrl = '/alerts';
-  let actionLabel = 'Review alert';
-
-  if (alert?.obligation) {
-    howToResolve = 'Upload the missing signed evidence or renewed municipal certificate in the compliance vault.';
-    actionUrl = '/compliance';
-    actionLabel = 'Upload document';
-  } else if (alert?.applicationId) {
-    howToResolve = 'Open the case dossier to record formal review observations or validate resubmissions.';
-    actionUrl = `/applications/${alert.applicationId}`;
-    actionLabel = 'View application';
-  } else if (alert?.alertType === 'EVC_DEADLINE') {
-    howToResolve = 'Appoint a 3-member expert inspection panel and confirm the visit date.';
-    actionUrl = '/evc';
-    actionLabel = 'Schedule inspection';
   }
 
   let urgencyText = 'Action needed';
@@ -480,6 +541,9 @@ export function formatPlainAlert(alert: any): PlainAlertAnatomy {
     urgencyText,
     actionUrl,
     actionLabel,
+    reason,
+    dueDate: dueDateText,
+    nextStep,
   };
 }
 

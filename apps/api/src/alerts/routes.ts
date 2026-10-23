@@ -26,6 +26,7 @@ router.get('/', authenticate, async (req: Request, res: Response, next) => {
             id: true,
             applicationNumber: true,
             currentStage: true,
+            deadlineDate: true,
             institution: { select: { name: true, code: true } },
           },
         },

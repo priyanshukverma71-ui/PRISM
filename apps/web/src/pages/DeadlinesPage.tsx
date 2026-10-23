@@ -97,16 +97,19 @@ export function DeadlinesPage() {
   (applications || []).forEach((app: any) => {
     if (app.deadlineDate && app.status !== 'APPROVED' && app.status !== 'REJECTED' && app.status !== 'CLOSED') {
       const diff = Math.ceil((new Date(app.deadlineDate).getTime() - now) / (1000 * 60 * 60 * 24));
+      const isUrgent = diff <= 3;
       allDeadlines.push({
         id: `app-${app.id}`,
         type: 'STAGE_DETERMINATION',
-        title: `${formatPlainStage(app.currentStage)} deadline`,
+        title: isUrgent
+          ? 'This application may miss its deadline. Review the pending verification.'
+          : `${formatPlainStage(app.currentStage)} review deadline`,
         institution: app.institution?.name || 'Institution',
         targetDate: app.deadlineDate,
         daysRemaining: diff,
         category: `Dossier #${app.applicationNumber}`,
         actionUrl: `/applications/${app.id}`,
-        actionLabel: 'View application',
+        actionLabel: 'Review pending verification',
       });
     }
   });
@@ -228,7 +231,7 @@ export function DeadlinesPage() {
               if (item.type === 'EVC_CUTOFF') {
                 return 'Next action: Appoint 3-member expert inspection panel and issue visit schedule';
               }
-              return 'Next action: Complete application review before deadline cutoff';
+              return 'Next action: Review the pending verification and record observations before deadline cutoff';
             })();
 
             return (

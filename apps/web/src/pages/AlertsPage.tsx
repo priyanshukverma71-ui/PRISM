@@ -11,6 +11,7 @@ import {
   HelpCircle,
   Wrench,
   AlertCircle,
+  Clock,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { formatPlainAlert, formatRole } from '../lib/plainLanguage.js';
@@ -154,7 +155,7 @@ export function AlertsPage() {
               >
                 {/* Alert Top Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-graphite-border pb-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={`px-2.5 py-0.5 rounded text-[10px] font-medium border ${
                         isCritical
@@ -166,8 +167,14 @@ export function AlertsPage() {
                     >
                       {anatomy.urgencyText}
                     </span>
+                    {anatomy.dueDate && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-950/40 text-amber-300 border border-amber-800/60 flex items-center gap-1">
+                        <Clock size={11} />
+                        <span>Due: {anatomy.dueDate}</span>
+                      </span>
+                    )}
                     <span className="text-[10px] text-slate-muted">
-                      Escalation tier {alt.escalationLevel} • {new Date(alt.createdAt).toLocaleString()}
+                      Tier {alt.escalationLevel} • {new Date(alt.createdAt).toLocaleString()}
                     </span>
                   </div>
 
@@ -198,49 +205,79 @@ export function AlertsPage() {
                   </div>
                 </div>
 
-                {/* The 4-Part Alert Anatomy Grid */}
+                {/* Primary Alert Heading & What to do */}
+                <div className="space-y-1">
+                  <h2 className="text-sm font-bold text-silver-bright flex items-center gap-2">
+                    <AlertCircle size={15} className={isCritical ? 'text-status-critical' : 'text-status-warning'} />
+                    <span>{anatomy.issue}</span>
+                  </h2>
+                </div>
+
+                {/* Next Step Action Box */}
+                <div className="p-3 rounded-xl bg-graphite/40 border border-graphite-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] uppercase font-semibold text-status-warning tracking-wider flex items-center gap-1">
+                      <Wrench size={11} />
+                      <span>Next step</span>
+                    </span>
+                    <p className="text-xs font-semibold text-silver-bright">
+                      {anatomy.nextStep}
+                    </p>
+                  </div>
+                  {anatomy.actionUrl && (
+                    <Link
+                      to={anatomy.actionUrl}
+                      className="platinum-button-primary px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                    >
+                      <span>{anatomy.actionLabel}</span>
+                      <ArrowRight size={12} />
+                    </Link>
+                  )}
+                </div>
+
+                {/* Supporting Details Grid: Reason, Due Date, Owner, Why It Matters */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  {/* 1. The Issue */}
+                  {/* Reason */}
                   <div className="p-3 rounded-xl bg-obsidian border border-graphite-border space-y-1">
                     <span className="text-[10px] uppercase font-semibold text-platinum tracking-wider flex items-center gap-1.5">
-                      <AlertCircle size={12} className={isCritical ? 'text-status-critical' : 'text-status-warning'} />
-                      <span>1. The issue</span>
+                      <AlertCircle size={12} className="text-slate-muted" />
+                      <span>Reason</span>
+                    </span>
+                    <p className="text-silver/90 leading-relaxed">
+                      {anatomy.reason || anatomy.issue}
+                    </p>
+                  </div>
+
+                  {/* Due Date & Timing */}
+                  <div className="p-3 rounded-xl bg-obsidian border border-graphite-border space-y-1">
+                    <span className="text-[10px] uppercase font-semibold text-platinum tracking-wider flex items-center gap-1.5">
+                      <Clock size={12} className="text-status-warning" />
+                      <span>Due date</span>
                     </span>
                     <p className="text-silver-bright font-medium leading-relaxed">
-                      {anatomy.issue}
+                      {anatomy.dueDate || 'Statutory review window cutoff pending'}
                     </p>
                   </div>
 
-                  {/* 2. Why It Matters */}
-                  <div className="p-3 rounded-xl bg-obsidian border border-graphite-border space-y-1">
-                    <span className="text-[10px] uppercase font-semibold text-status-warning tracking-wider flex items-center gap-1.5">
-                      <HelpCircle size={12} />
-                      <span>2. Why it matters</span>
-                    </span>
-                    <p className="text-silver/80 leading-relaxed">
-                      {anatomy.whyItMatters}
-                    </p>
-                  </div>
-
-                  {/* 3. Who Owns the Next Step */}
+                  {/* Who Owns the Next Step */}
                   <div className="p-3 rounded-xl bg-obsidian border border-graphite-border space-y-1">
                     <span className="text-[10px] uppercase font-semibold text-platinum tracking-wider flex items-center gap-1.5">
                       <UserCheck size={12} />
-                      <span>3. Who owns the next step</span>
+                      <span>Who owns the next step</span>
                     </span>
                     <p className="text-silver-bright font-medium">
                       {anatomy.owner}
                     </p>
                   </div>
 
-                  {/* 4. How to Resolve It */}
+                  {/* Why It Matters */}
                   <div className="p-3 rounded-xl bg-obsidian border border-graphite-border space-y-1">
-                    <span className="text-[10px] uppercase font-semibold text-status-success tracking-wider flex items-center gap-1.5">
-                      <Wrench size={12} />
-                      <span>4. How to resolve it</span>
+                    <span className="text-[10px] uppercase font-semibold text-status-warning tracking-wider flex items-center gap-1.5">
+                      <HelpCircle size={12} />
+                      <span>Why it matters</span>
                     </span>
-                    <p className="text-silver/90 font-medium leading-relaxed">
-                      {anatomy.howToResolve}
+                    <p className="text-silver/80 leading-relaxed">
+                      {anatomy.whyItMatters}
                     </p>
                   </div>
                 </div>

@@ -111,6 +111,18 @@ router.get('/summary', authenticate, async (req: Request, res: Response, next) =
         status: 'UNRESOLVED',
         ...(user.role === 'INSTITUTION_USER' ? { recipientRole: 'INSTITUTION_USER' } : {}),
       },
+      include: {
+        application: {
+          select: {
+            id: true,
+            applicationNumber: true,
+            currentStage: true,
+            deadlineDate: true,
+            institution: { select: { name: true, code: true } },
+          },
+        },
+        obligation: { select: { id: true, title: true, dueDate: true } },
+      },
       orderBy: { createdAt: 'desc' },
       take: 6,
     });
