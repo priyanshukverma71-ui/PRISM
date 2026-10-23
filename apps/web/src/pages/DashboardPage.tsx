@@ -343,40 +343,40 @@ export function DashboardPage() {
         </div>
 
         {/* View Mode Selector: 3D Holodeck vs Task-First vs Analytics */}
-        <div className="flex items-center gap-1.5 bg-graphite p-1 rounded-xl border border-graphite-border self-start md:self-auto">
+        <div className="flex items-center gap-1.5 liquid-glass-capsule p-1.5 rounded-2xl self-start md:self-auto shadow-xl">
           <button
             onClick={() => handleViewModeChange('3D_HOLODECK')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
               viewMode === '3D_HOLODECK'
-                ? 'bg-platinum text-obsidian font-semibold'
-                : 'text-slate-muted hover:text-silver'
+                ? 'liquid-glass-pill-active font-semibold'
+                : 'liquid-glass-pill text-slate-muted hover:text-silver'
             }`}
           >
-            <Globe size={14} />
+            <Globe size={14} className={viewMode === '3D_HOLODECK' ? 'text-obsidian' : 'text-[#F5BA42]'} />
             <span>3D Holodeck</span>
           </button>
 
           <button
             onClick={() => handleViewModeChange('TASK_FIRST')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
               viewMode === 'TASK_FIRST'
-                ? 'bg-platinum text-obsidian font-semibold'
-                : 'text-slate-muted hover:text-silver'
+                ? 'liquid-glass-pill-active font-semibold'
+                : 'liquid-glass-pill text-slate-muted hover:text-silver'
             }`}
           >
-            <ListTodo size={14} />
+            <ListTodo size={14} className={viewMode === 'TASK_FIRST' ? 'text-obsidian' : 'text-[#F5BA42]'} />
             <span>Task view</span>
           </button>
 
           <button
             onClick={() => handleViewModeChange('ANALYTICS')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
               viewMode === 'ANALYTICS'
-                ? 'bg-platinum text-obsidian font-semibold'
-                : 'text-slate-muted hover:text-silver'
+                ? 'liquid-glass-pill-active font-semibold'
+                : 'liquid-glass-pill text-slate-muted hover:text-silver'
             }`}
           >
-            <BarChart3 size={14} />
+            <BarChart3 size={14} className={viewMode === 'ANALYTICS' ? 'text-obsidian' : 'text-[#F5BA42]'} />
             <span>Analytics</span>
           </button>
         </div>

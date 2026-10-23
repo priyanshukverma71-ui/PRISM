@@ -281,7 +281,7 @@ export function AppLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Command Bar with Breadcrumbs & Controls */}
-        <header className="h-16 border-b border-graphite-border bg-graphite/70 backdrop-blur-md px-6 flex items-center justify-between z-20">
+        <header className="h-16 liquid-glass-toolbar px-6 flex items-center justify-between z-20">
           {/* Breadcrumb Navigation */}
           <nav aria-label="Breadcrumbs" className="flex items-center gap-2 text-xs">
             {breadcrumbs.map((crumb, idx) => {
@@ -301,20 +301,20 @@ export function AppLayout() {
             })}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {/* Live IST Time */}
-            <div className="hidden lg:flex items-center gap-1.5 bg-obsidian px-3 py-1 rounded-lg border border-graphite-border text-xs font-mono text-platinum">
-              <span className="w-1.5 h-1.5 rounded-full bg-status-success" />
+            <div className="hidden lg:flex items-center gap-1.5 liquid-glass-pill px-3 py-1.5 rounded-xl text-xs font-mono text-platinum">
+              <span className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
               <span>{currentTime}</span>
             </div>
 
             {/* Reduced Motion Toggle */}
             <button
               onClick={toggleReducedMotion}
-              className={`p-1.5 px-2.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors ${
+              className={`p-1.5 px-3 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all ${
                 reducedMotion
-                  ? 'bg-gunmetal border-platinum text-platinum'
-                  : 'bg-obsidian border-graphite-border text-slate-muted hover:text-silver'
+                  ? 'liquid-glass-pill-active'
+                  : 'liquid-glass-pill text-slate-muted hover:text-silver'
               }`}
               title="Toggle animations and 3D effects"
             >
@@ -323,8 +323,8 @@ export function AppLayout() {
             </button>
 
             {/* Fast Demo Role Switcher */}
-            <div className="flex items-center gap-2 bg-obsidian px-2.5 py-1 rounded-lg border border-graphite-border">
-              <UserCheck size={14} className="text-platinum" />
+            <div className="flex items-center gap-2 liquid-glass-pill px-3 py-1.5 rounded-xl">
+              <UserCheck size={14} className="text-[#F5BA42]" />
               <select
                 id="role-select"
                 aria-label="Switch evaluation role"
@@ -345,11 +345,11 @@ export function AppLayout() {
             <Link
               to="/alerts"
               aria-label="View notifications"
-              className="relative p-2 rounded-lg bg-obsidian border border-graphite-border hover:border-platinum/40 text-slate-muted hover:text-silver transition-colors"
+              className="relative p-2 rounded-xl liquid-glass-pill text-slate-muted hover:text-silver transition-all"
             >
               <Bell size={16} />
               {unresolvedAlertsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-status-critical text-[10px] font-bold rounded-full flex items-center justify-center text-white">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-status-critical text-[10px] font-bold rounded-full flex items-center justify-center text-white shadow-lg">
                   {unresolvedAlertsCount}
                 </span>
               )}

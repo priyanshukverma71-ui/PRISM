@@ -180,7 +180,7 @@ export function MinimalTaskView({
       {/* ============================================================== */}
       {/* TOP TACTILE CHIP CONTROL STRIP (AESTHETIC OF CENTER 0.2 CHIP)  */}
       {/* ============================================================== */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0B0D11] p-2.5 rounded-2xl border border-[#1A1E26]">
+      <div className="flex flex-wrap items-center justify-between gap-3 liquid-glass-capsule p-3 rounded-2xl shadow-xl">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-mono uppercase tracking-wider text-slate-muted pl-2">
             Minimalist Task Workspace
@@ -195,10 +195,10 @@ export function MinimalTaskView({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setTaskFilter(taskFilter === 'URGENT' ? 'ALL' : 'URGENT')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
               taskFilter === 'URGENT'
-                ? 'bg-[#181C25] border-[#F5BA42] text-[#F5BA42] shadow-[0_0_12px_rgba(245,186,66,0.2)]'
-                : 'bg-[#101318] border-[#1E232D] text-slate-muted hover:text-silver hover:border-slate-subtle'
+                ? 'liquid-glass-pill-active !bg-gradient-to-r !from-[#F5BA42] !to-[#E5A832] !text-[#0B0D11] font-bold shadow-[0_0_16px_rgba(245,186,66,0.35)]'
+                : 'liquid-glass-pill text-slate-muted hover:text-silver'
             }`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#F5BA42]" />
@@ -208,10 +208,10 @@ export function MinimalTaskView({
 
           <button
             onClick={() => setTaskFilter(taskFilter === 'DUE_SOON' ? 'ALL' : 'DUE_SOON')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
               taskFilter === 'DUE_SOON'
-                ? 'bg-[#181C25] border-platinum text-silver-bright shadow-[0_0_12px_rgba(255,255,255,0.15)]'
-                : 'bg-[#101318] border-[#1E232D] text-slate-muted hover:text-silver hover:border-slate-subtle'
+                ? 'liquid-glass-pill-active font-bold shadow-[0_0_16px_rgba(255,255,255,0.25)]'
+                : 'liquid-glass-pill text-slate-muted hover:text-silver'
             }`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-platinum" />
@@ -221,10 +221,10 @@ export function MinimalTaskView({
 
           <button
             onClick={() => setShowLedgerDrawer(!showLedgerDrawer)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
               showLedgerDrawer
-                ? 'bg-[#181C25] border-platinum text-platinum'
-                : 'bg-[#101318] border-[#1E232D] text-slate-muted hover:text-silver hover:border-slate-subtle'
+                ? 'liquid-glass-pill-active font-bold'
+                : 'liquid-glass-pill text-slate-muted hover:text-silver'
             }`}
           >
             <span className="font-bold text-silver-bright">{waitingApplications.length}</span>
@@ -589,11 +589,11 @@ export function MinimalTaskView({
       {/* EXPANDABLE APPLICATION LEDGER & AUDIT TRAYS                     */}
       {/* ============================================================== */}
       <div className="pt-2">
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0B0D11] p-3 rounded-2xl border border-[#1A1E26]">
+        <div className="flex flex-wrap items-center justify-between gap-3 liquid-glass-capsule p-3 rounded-2xl shadow-xl">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowLedgerDrawer(!showLedgerDrawer)}
-              className="platinum-button-secondary px-3.5 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 cursor-pointer"
+              className="liquid-glass-pill px-3.5 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 cursor-pointer text-silver hover:text-white"
             >
               <Layers size={13} className="text-[#F5BA42]" />
               <span>
@@ -607,7 +607,7 @@ export function MinimalTaskView({
 
             <button
               onClick={() => setShowAuditDrawer(!showAuditDrawer)}
-              className="platinum-button-secondary px-3.5 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 cursor-pointer"
+              className="liquid-glass-pill px-3.5 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 cursor-pointer text-silver hover:text-white"
             >
               <span>
                 {showAuditDrawer ? 'Hide activity audit' : 'View recent activity'}
