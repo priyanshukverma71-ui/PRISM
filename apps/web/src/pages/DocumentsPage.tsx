@@ -73,7 +73,7 @@ export function DocumentsPage() {
       institutionId: user?.institutionId || documents?.[0]?.institutionId,
       title: docTitle,
       category: docCategory,
-      fileName: docFileName || `${docTitle.replace(/\s+/g, '-')}.pdf`,
+      fileName: docFileName || `${(docTitle || 'document').replace(/\s+/g, '-')}.pdf`,
       fileSize: 3145728,
       expiryDate: docExpiryDate ? new Date(docExpiryDate).toISOString() : undefined,
     });

@@ -250,7 +250,7 @@ function InstitutionalNode({
           </div>
 
           <div className="text-[9px] opacity-85 truncate max-w-[130px]">
-            {node.institutionName.split(' ')[0]} • Risk: {dynamicState.risk}
+            {(node.institutionName || 'Application').split(' ')[0]} • Risk: {dynamicState.risk}
           </div>
 
           {dynamicState.isRuptured && (
@@ -326,7 +326,8 @@ export function SpatialHolodeck({
 
   // Position nodes in an orbital ring around the central prism
   const nodePositions = useMemo(() => {
-    const total = cases.length || 6;
+    if (!cases.length) return [];
+    const total = cases.length;
     const radius = 6.2;
     return cases.map((_, i) => {
       const angle = (i / total) * Math.PI * 2;
@@ -387,7 +388,7 @@ export function SpatialHolodeck({
           <InstitutionalNode
             key={c.id}
             node={c}
-            position={nodePositions[idx]}
+            position={nodePositions[idx] || [0, 0, 0]}
             isSelected={selectedCaseId === c.id}
             onClick={() => onSelectCase(c)}
             temporalOffsetDays={temporalOffsetDays}
@@ -401,10 +402,10 @@ export function SpatialHolodeck({
       <div className="absolute top-4 left-4 pointer-events-none space-y-1">
         <div className="flex items-center gap-2 bg-obsidian/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-graphite-border font-mono text-xs text-platinum">
           <span className="w-2 h-2 rounded-full bg-status-success animate-ping" />
-          <span>SPATIAL HOLODECK // AICTE ORBITAL NETWORK</span>
+          <span>3D Spatial Holodeck • Active Institutional Network</span>
         </div>
         <p className="text-[10px] font-mono text-slate-muted pl-1">
-          Click any satellite node to lock focus & open instant Case Dossier
+          Click any satellite node to lock focus & open instant case dossier
         </p>
       </div>
 

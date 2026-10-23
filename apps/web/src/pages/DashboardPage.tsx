@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowRight,
@@ -45,11 +45,38 @@ import {
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const [viewMode, setViewMode] = useState<'TASK_FIRST' | '3D_HOLODECK' | 'ANALYTICS'>('TASK_FIRST');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlView = searchParams.get('view');
+  const [viewMode, setViewMode] = useState<'3D_HOLODECK' | 'TASK_FIRST' | 'ANALYTICS'>(() => {
+    if (urlView === 'TASK_FIRST' || urlView === 'ANALYTICS' || urlView === '3D_HOLODECK') {
+      return urlView;
+    }
+    return '3D_HOLODECK'; // Default opener page is 3D Spatial Holodeck
+  });
   const [selectedCase, setSelectedCase] = useState<SpatialCaseNode | null>(null);
   const [temporalOffset, setTemporalOffset] = useState<number>(0);
   const [activeIntervention, setActiveIntervention] = useState<'NONE' | 'FAST_TRACK_EVC' | 'SPECIAL_SCRUTINY_DRIVE' | 'PROVISIONAL_UNDERTAKING'>('NONE');
   const [showSecondaryAnalytics, setShowSecondaryAnalytics] = useState<boolean>(false);
+
+  // Sync state if URL search query changes
+  useEffect(() => {
+    if (urlView === 'TASK_FIRST' || urlView === 'ANALYTICS' || urlView === '3D_HOLODECK') {
+      setViewMode(urlView);
+    }
+  }, [urlView]);
+
+  const handleViewModeChange = (mode: '3D_HOLODECK' | 'TASK_FIRST' | 'ANALYTICS') => {
+    setViewMode(mode);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (mode === '3D_HOLODECK') {
+        next.delete('view');
+      } else {
+        next.set('view', mode);
+      }
+      return next;
+    }, { replace: true });
+  };
 
   // 1. Dashboard summary
   const { data: summary, isLoading: isSummaryLoading } = useQuery({
@@ -304,7 +331,7 @@ export function DashboardPage() {
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-silver-bright tracking-tight">Executive dashboard</h1>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-gunmetal text-platinum border border-graphite-border">
-                  Task overview
+                  {viewMode === '3D_HOLODECK' ? '3D Holodeck' : viewMode === 'TASK_FIRST' ? 'Task view' : 'Analytics'}
                 </span>
               </div>
               <p className="text-xs text-slate-muted">
@@ -314,23 +341,11 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* View Mode Selector: Task-First vs 3D Holodeck vs Telemetry */}
+        {/* View Mode Selector: 3D Holodeck vs Task-First vs Analytics */}
         <div className="flex items-center gap-1.5 bg-graphite p-1 rounded-xl border border-graphite-border self-start md:self-auto">
           <button
-            onClick={() => setViewMode('TASK_FIRST')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
-              viewMode === 'TASK_FIRST'
-                ? 'bg-platinum text-obsidian font-semibold'
-                : 'text-slate-muted hover:text-silver'
-            }`}
-          >
-            <ListTodo size={14} />
-            <span>Task view</span>
-          </button>
-
-          <button
-            onClick={() => setViewMode('3D_HOLODECK')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
+            onClick={() => handleViewModeChange('3D_HOLODECK')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
               viewMode === '3D_HOLODECK'
                 ? 'bg-platinum text-obsidian font-semibold'
                 : 'text-slate-muted hover:text-silver'
@@ -341,8 +356,20 @@ export function DashboardPage() {
           </button>
 
           <button
-            onClick={() => setViewMode('ANALYTICS')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
+            onClick={() => handleViewModeChange('TASK_FIRST')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+              viewMode === 'TASK_FIRST'
+                ? 'bg-platinum text-obsidian font-semibold'
+                : 'text-slate-muted hover:text-silver'
+            }`}
+          >
+            <ListTodo size={14} />
+            <span>Task view</span>
+          </button>
+
+          <button
+            onClick={() => handleViewModeChange('ANALYTICS')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
               viewMode === 'ANALYTICS'
                 ? 'bg-platinum text-obsidian font-semibold'
                 : 'text-slate-muted hover:text-silver'
@@ -1016,12 +1043,12 @@ export function DashboardPage() {
       {/* ============================================================== */}
       {viewMode === '3D_HOLODECK' && (
         <div className="space-y-4 animate-in fade-in duration-300">
-          <div className="flex items-center justify-between text-xs text-slate-muted bg-gunmetal/40 px-3 py-2 rounded-xl border border-graphite-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-muted bg-gunmetal/40 px-3.5 py-2 rounded-xl border border-graphite-border">
             <span>Spatial orbital nodes represent active institutional applications. Drag to rotate, scroll to zoom.</span>
-            <span className="text-platinum font-medium">Click node to open dossier</span>
+            <span className="text-platinum font-medium">Click any node to open case dossier</span>
           </div>
 
-          <div className="h-[520px] w-full relative rounded-2xl overflow-hidden border border-graphite-border">
+          <div className="h-[580px] w-full relative rounded-2xl overflow-hidden border border-graphite-border shadow-2xl">
             <SpatialHolodeck
               cases={spatialNodes}
               onSelectCase={(c) => setSelectedCase(c)}

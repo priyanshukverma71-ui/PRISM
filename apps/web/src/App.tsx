@@ -72,6 +72,7 @@ export function App() {
             >
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="holodeck" element={<Navigate to="/dashboard?view=3D_HOLODECK" replace />} />
               <Route path="applications" element={<ApplicationsPage />} />
               <Route path="applications/new" element={<NewApplicationPage />} />
               <Route path="applications/:id" element={<ApplicationDetailPage />} />
