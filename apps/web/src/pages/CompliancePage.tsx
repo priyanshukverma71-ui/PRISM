@@ -4,16 +4,17 @@ import {
   ShieldCheck,
   Upload,
   CheckCircle,
-  XCircle,
-  Clock,
-  AlertTriangle,
   FileText,
-  Search,
-  Filter,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
-import { formatPlainComplianceStatus, formatDaysRemaining } from '../lib/plainLanguage.js';
+import {
+  formatPlainComplianceStatus,
+  formatDaysRemaining,
+  formatCategory,
+  formatSeverity,
+  formatStatus,
+} from '../lib/plainLanguage.js';
 
 export function CompliancePage() {
   const { user } = useAuth();
@@ -71,14 +72,14 @@ export function CompliancePage() {
 
   const handleOpenSubmit = (ob: any) => {
     setSelectedObligation(ob);
-    setFileName(`${ob.prescribedDocType}_Signed_2025.pdf`);
+    setFileName(`${ob.prescribedDocType || 'Document'}_Signed_2025.pdf`);
     setSubmitModalOpen(true);
   };
 
   const handleOpenVerify = (ob: any, sub: any) => {
     setSelectedObligation(ob);
     setSelectedSubmission(sub);
-    setVerifyComments('Prescribed documentation verified in order against statutory APH checklist.');
+    setVerifyComments('Prescribed documentation verified in order against statutory checklist.');
     setVerifyModalOpen(true);
   };
 
@@ -90,8 +91,8 @@ export function CompliancePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-silver-bright tracking-tight">Compliance & Undertakings Vault</h2>
-          <p className="text-xs text-slate-muted">Prescribed regulatory covenants, land lease deeds, fire NOCs, and evidence verification</p>
+          <h1 className="text-xl font-bold text-silver-bright tracking-tight">Compliance requirements</h1>
+          <p className="text-xs text-slate-muted">Prescribed regulatory covenants, land lease deeds, safety clearances, and document verification</p>
         </div>
       </div>
 
@@ -101,31 +102,33 @@ export function CompliancePage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-obsidian border border-graphite-border rounded-lg px-2.5 py-1.5 text-xs text-silver focus:outline-none"
+            aria-label="Filter by compliance status"
+            className="bg-obsidian border border-graphite-border rounded-lg px-2.5 py-1.5 text-xs text-silver focus:outline-none cursor-pointer"
           >
-            <option value="">All Compliance Statuses</option>
-            <option value="PENDING">Pending Submission</option>
-            <option value="SUBMITTED">Submitted (Awaiting Verification)</option>
-            <option value="VERIFIED">Verified / Compliant</option>
-            <option value="DEFICIENT">Deficient / Action Required</option>
-            <option value="EXPIRED">Overdue / Expired</option>
+            <option value="">All compliance statuses</option>
+            <option value="PENDING">Pending submission</option>
+            <option value="SUBMITTED">Waiting for review</option>
+            <option value="VERIFIED">Verified & compliant</option>
+            <option value="DEFICIENT">Clarification needed</option>
+            <option value="EXPIRED">Overdue / expired</option>
           </select>
 
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="bg-obsidian border border-graphite-border rounded-lg px-2.5 py-1.5 text-xs text-silver focus:outline-none"
+            aria-label="Filter by category"
+            className="bg-obsidian border border-graphite-border rounded-lg px-2.5 py-1.5 text-xs text-silver focus:outline-none cursor-pointer"
           >
-            <option value="">All Categories</option>
-            <option value="LAND_BUILDING">Land & Building</option>
-            <option value="SAFETY_NOC">Safety & Disaster NOC</option>
-            <option value="FACULTY_CADRE">Faculty Cadre & Salary</option>
-            <option value="AFFILIATION">Affiliating University</option>
+            <option value="">All categories</option>
+            <option value="LAND_BUILDING">Land and building</option>
+            <option value="SAFETY_NOC">Safety clearance</option>
+            <option value="FACULTY_CADRE">Faculty cadre and salary</option>
+            <option value="AFFILIATION">University affiliation</option>
           </select>
         </div>
 
-        <span className="text-xs font-mono text-slate-muted">
-          Tracking {obligations?.length || 0} Regulatory Obligations
+        <span className="text-xs text-slate-muted">
+          Tracking {obligations?.length || 0} regulatory requirements
         </span>
       </div>
 
@@ -136,7 +139,7 @@ export function CompliancePage() {
         ) : (obligations || []).length === 0 ? (
           <div className="platinum-card p-12 text-center text-slate-muted rounded-xl border border-graphite-border">
             <ShieldCheck size={32} className="mx-auto mb-2 text-gunmetal-light" />
-            <p className="text-sm font-medium text-silver">No obligations match current filter</p>
+            <p className="text-sm font-medium text-silver">No requirements found. Try changing your filters.</p>
           </div>
         ) : (
           obligations!.map((ob: any) => {
@@ -154,27 +157,27 @@ export function CompliancePage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-bold text-sm text-silver-bright">{ob.title}</span>
                       <span
-                        className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold border ${statusInfo.badgeStyle}`}
+                        className={`px-2.5 py-0.5 rounded text-[10px] font-medium border ${statusInfo.badgeStyle}`}
                       >
                         {statusInfo.label}
                       </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-gunmetal text-platinum">
-                        Severity: {ob.severity}
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-gunmetal text-platinum">
+                        Severity: {formatSeverity(ob.severity)}
                       </span>
                     </div>
 
                     <p className="text-xs text-slate-muted">{ob.description}</p>
-                    <p className="text-[11px] font-mono text-slate-muted">
-                      Target: {ob.institution.name} ({ob.institution.code}) • Category: {String(ob.category).replace(/_/g, ' ')}
+                    <p className="text-[11px] text-slate-muted">
+                      Target: {ob.institution.name} ({ob.institution.code}) • Category: {formatCategory(ob.category)}
                     </p>
                   </div>
 
                   <div className="text-right self-start sm:self-auto bg-gunmetal/40 px-3 py-1.5 rounded-lg border border-graphite-border">
-                    <span className="text-[10px] font-mono text-slate-muted block">
-                      Statutory Deadline:
+                    <span className="text-[10px] text-slate-muted block">
+                      Deadline:
                     </span>
                     <span
-                      className={`font-mono text-xs font-bold ${
+                      className={`text-xs font-semibold ${
                         timing.isOverdue
                           ? 'text-status-critical'
                           : timing.isAtRisk
@@ -188,28 +191,28 @@ export function CompliancePage() {
                 </div>
 
                 {/* Plain-Language Next Action Guidance Banner */}
-                <div className="p-2.5 rounded-lg bg-obsidian border border-graphite-border/70 flex items-center justify-between text-xs">
-                  <span className="font-mono text-platinum font-semibold flex items-center gap-1.5">
+                <div className="p-2.5 rounded-lg bg-obsidian border border-graphite-border flex items-center justify-between text-xs">
+                  <span className="text-platinum font-medium flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-platinum" />
                     <span>{statusInfo.nextAction}</span>
                   </span>
                   {latestSub && (
-                    <span className="text-[10px] font-mono text-slate-muted hidden md:inline">
-                      Evidence v{latestSub.version} ({latestSub.fileName}): {latestSub.status === 'PENDING_VERIFICATION' ? 'Waiting for review' : latestSub.status}
+                    <span className="text-[10px] text-slate-muted hidden md:inline">
+                      Evidence v{latestSub.version} ({latestSub.fileName}): {formatStatus(latestSub.status)}
                     </span>
                   )}
                 </div>
 
                 {/* Submissions & Actions Bar */}
                 <div className="pt-3 border-t border-graphite-border flex flex-wrap items-center justify-between gap-3">
-                  <div className="text-xs font-mono text-slate-muted">
+                  <div className="text-xs text-slate-muted">
                     {latestSub ? (
                       <span>
-                        Latest Evidence: <span className="text-silver">{latestSub.fileName}</span> (v{latestSub.version}) • Status:{' '}
-                        <span className="text-platinum">{latestSub.status}</span>
+                        Latest document: <span className="text-silver">{latestSub.fileName}</span> (v{latestSub.version}) • Status:{' '}
+                        <span className="text-platinum font-medium">{formatStatus(latestSub.status)}</span>
                       </span>
                     ) : (
-                      <span>No evidence submitted yet.</span>
+                      <span>No document submitted yet.</span>
                     )}
                   </div>
 
@@ -218,10 +221,10 @@ export function CompliancePage() {
                     {ob.status !== 'VERIFIED' && (
                       <button
                         onClick={() => handleOpenSubmit(ob)}
-                        className="platinum-button-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                        className="platinum-button-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                       >
                         <Upload size={13} />
-                        <span>Submit Evidence</span>
+                        <span>Upload document</span>
                       </button>
                     )}
 
@@ -229,10 +232,10 @@ export function CompliancePage() {
                     {isOfficerOrAdmin && latestSub && latestSub.status === 'PENDING_VERIFICATION' && (
                       <button
                         onClick={() => handleOpenVerify(ob, latestSub)}
-                        className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-status-success border-status-success/30 hover:border-status-success"
+                        className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-status-success border-status-success/30 hover:border-status-success cursor-pointer"
                       >
                         <CheckCircle size={13} />
-                        <span>Verify Evidence</span>
+                        <span>Verify document</span>
                       </button>
                     )}
                   </div>
@@ -249,14 +252,14 @@ export function CompliancePage() {
           <div className="platinum-card max-w-md w-full p-6 rounded-2xl border border-graphite-border space-y-4">
             <h3 className="text-sm font-bold text-silver-bright flex items-center gap-2">
               <Upload size={16} className="text-platinum" />
-              <span>Submit Compliance Evidence</span>
+              <span>Upload document</span>
             </h3>
             <p className="text-xs text-slate-muted">
               {selectedObligation.title} — {selectedObligation.institution.name}
             </p>
 
             <div>
-              <label className="block text-xs font-medium text-platinum mb-1 font-mono">Evidence File Name *</label>
+              <label className="block text-xs font-medium text-platinum mb-1">Document file name *</label>
               <input
                 type="text"
                 value={fileName}
@@ -266,16 +269,11 @@ export function CompliancePage() {
               />
             </div>
 
-            <div className="p-3 bg-obsidian rounded border border-graphite-border text-[11px] font-mono text-slate-muted space-y-1">
-              <p>Simulated File Size: {(fileSize / 1024 / 1024).toFixed(2)} MB</p>
-              <p className="text-platinum">Crypto Engine: Instant SHA-256 Checksum Calculation</p>
-            </div>
-
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setSubmitModalOpen(false)}
-                className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs"
+                className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs cursor-pointer"
               >
                 Cancel
               </button>
@@ -290,7 +288,7 @@ export function CompliancePage() {
                 disabled={submitEvidenceMutation.isPending || !fileName}
                 className="platinum-button-primary px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-50"
               >
-                {submitEvidenceMutation.isPending ? 'Uploading & Hashing...' : 'Submit Evidence'}
+                {submitEvidenceMutation.isPending ? 'Uploading...' : 'Save document'}
               </button>
             </div>
           </div>
@@ -303,27 +301,26 @@ export function CompliancePage() {
           <div className="platinum-card max-w-md w-full p-6 rounded-2xl border border-graphite-border space-y-4">
             <h3 className="text-sm font-bold text-silver-bright flex items-center gap-2">
               <ShieldCheck size={16} className="text-status-success" />
-              <span>Verify Institutional Evidence</span>
+              <span>Verify document</span>
             </h3>
             <p className="text-xs text-slate-muted">
-              File: <span className="font-mono text-silver">{selectedSubmission.fileName}</span> (Hash:{' '}
-              {selectedSubmission.fileHash.substring(0, 12)}...)
+              File: <span className="font-mono text-silver">{selectedSubmission.fileName}</span>
             </p>
 
             <div>
-              <label className="block text-xs font-medium text-platinum mb-1 font-mono">Regulatory Determination</label>
+              <label className="block text-xs font-medium text-platinum mb-1">Review determination</label>
               <select
                 value={verifyStatus}
                 onChange={(e: any) => setVerifyStatus(e.target.value)}
                 className="w-full bg-obsidian border border-graphite-border rounded-lg p-2 text-xs text-silver focus:outline-none"
               >
-                <option value="VERIFIED">VERIFIED — Requirement Satisfied</option>
-                <option value="RETURNED_WITH_DEFICIENCY">DEFICIENT — Reject & Raise Formal Deficiency</option>
+                <option value="VERIFIED">Verified — Requirement satisfied</option>
+                <option value="RETURNED_WITH_DEFICIENCY">Clarification needed — Record deficiency</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-platinum mb-1 font-mono">Verification Remarks *</label>
+              <label className="block text-xs font-medium text-platinum mb-1">Verification remarks *</label>
               <textarea
                 value={verifyComments}
                 onChange={(e) => setVerifyComments(e.target.value)}
@@ -337,7 +334,7 @@ export function CompliancePage() {
               <button
                 type="button"
                 onClick={() => setVerifyModalOpen(false)}
-                className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs"
+                className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs cursor-pointer"
               >
                 Cancel
               </button>
@@ -356,7 +353,7 @@ export function CompliancePage() {
                 disabled={verifyEvidenceMutation.isPending}
                 className="platinum-button-primary px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
               >
-                {verifyEvidenceMutation.isPending ? 'Recording in Audit...' : 'Execute Determination'}
+                {verifyEvidenceMutation.isPending ? 'Saving...' : 'Confirm review'}
               </button>
             </div>
           </div>
@@ -365,4 +362,5 @@ export function CompliancePage() {
     </div>
   );
 }
+
 export default CompliancePage;

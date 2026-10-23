@@ -1,14 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  BarChart3,
   Download,
-  PieChart as PieIcon,
-  TrendingUp,
-  MapPin,
-  Clock,
-  ShieldCheck,
-  AlertTriangle,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import {
@@ -23,6 +16,7 @@ import {
   Cell,
   Legend,
 } from 'recharts';
+import { formatPlainStage } from '../lib/plainLanguage.js';
 
 export function ReportsPage() {
   const { data: analytics, isLoading } = useQuery({
@@ -54,18 +48,13 @@ export function ReportsPage() {
   }
 
   const stageData = (analytics?.stagePendency || []).map((s: any) => ({
-    name: (s.stage || '').replace(/_/g, ' '),
+    name: formatPlainStage(s.stage),
     count: s.count,
   }));
 
   const regionData = (analytics?.regionWorkload || []).map((r: any) => ({
-    name: r.region,
+    name: `${r.region} region`,
     value: r.count,
-  }));
-
-  const complianceData = (analytics?.complianceStatus || []).map((c: any) => ({
-    name: c.status,
-    value: c.count,
   }));
 
   return (
@@ -73,37 +62,37 @@ export function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-silver-bright tracking-tight">Executive Analytics & Reports</h2>
+          <h1 className="text-xl font-bold text-silver-bright tracking-tight">Executive analytics and reports</h1>
           <p className="text-xs text-slate-muted">Comprehensive regulatory workload analytics, stage bottlenecks, and compliance metrics</p>
         </div>
 
         <button
           onClick={handleExportCsv}
-          className="platinum-button-primary px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 self-start cursor-pointer shadow-platinum"
+          className="platinum-button-primary px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 self-start cursor-pointer"
         >
           <Download size={14} />
-          <span>Export Official Regulatory CSV</span>
+          <span>Export CSV</span>
         </button>
       </div>
 
       {/* Top Telemetry Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="platinum-card p-4 rounded-xl border border-graphite-border">
-          <span className="text-[10px] font-mono text-slate-muted uppercase">Active Cases Monitored</span>
+          <span className="text-[10px] text-slate-muted uppercase">Active cases monitored</span>
           <p className="text-2xl font-bold text-silver-bright font-mono mt-1">{analytics?.totalApplications || 0}</p>
         </div>
         <div className="platinum-card p-4 rounded-xl border border-graphite-border">
-          <span className="text-[10px] font-mono text-slate-muted uppercase">Multi-Channel Alert Delivery</span>
+          <span className="text-[10px] text-slate-muted uppercase">Alert delivery rate</span>
           <p className="text-2xl font-bold text-status-success font-mono mt-1">{analytics?.alertDeliveryRate || 100}%</p>
         </div>
         <div className="platinum-card p-4 rounded-xl border border-graphite-border">
-          <span className="text-[10px] font-mono text-slate-muted uppercase">Expired Document Records</span>
+          <span className="text-[10px] text-slate-muted uppercase">Expired document records</span>
           <p className="text-2xl font-bold text-status-critical font-mono mt-1">
             {analytics?.documentExpirySummary?.expired || 0}
           </p>
         </div>
         <div className="platinum-card p-4 rounded-xl border border-graphite-border">
-          <span className="text-[10px] font-mono text-slate-muted uppercase">Expiring in &lt; 30 Days</span>
+          <span className="text-[10px] text-slate-muted uppercase">Expiring in &lt; 30 days</span>
           <p className="text-2xl font-bold text-status-warning font-mono mt-1">
             {analytics?.documentExpirySummary?.expiringIn30Days || 0}
           </p>
@@ -115,10 +104,10 @@ export function ReportsPage() {
         {/* Stage Pendency Bar Chart */}
         <div className="platinum-card p-5 rounded-2xl border border-graphite-border space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-graphite-border">
-            <h3 className="text-xs font-mono uppercase tracking-wider text-platinum font-semibold">
-              Stage Pendency Distribution
-            </h3>
-            <span className="text-[10px] font-mono text-slate-muted">Cases per Stage</span>
+            <h2 className="text-xs uppercase tracking-wider text-platinum font-semibold">
+              Stage distribution
+            </h2>
+            <span className="text-[10px] text-slate-muted">Applications per stage</span>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -137,10 +126,10 @@ export function ReportsPage() {
         {/* Regional Workload Distribution Donut */}
         <div className="platinum-card p-5 rounded-2xl border border-graphite-border space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-graphite-border">
-            <h3 className="text-xs font-mono uppercase tracking-wider text-platinum font-semibold">
-              Regional Workload Balance
-            </h3>
-            <span className="text-[10px] font-mono text-slate-muted">Regional Share</span>
+            <h2 className="text-xs uppercase tracking-wider text-platinum font-semibold">
+              Regional workload distribution
+            </h2>
+            <span className="text-[10px] text-slate-muted">Regional breakdown</span>
           </div>
           <div className="h-64 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
@@ -170,4 +159,5 @@ export function ReportsPage() {
     </div>
   );
 }
+
 export default ReportsPage;

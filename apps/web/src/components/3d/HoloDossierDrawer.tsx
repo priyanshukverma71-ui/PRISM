@@ -2,17 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   X,
-  ShieldAlert,
-  ShieldCheck,
-  Calendar,
-  Clock,
-  ArrowRight,
-  RotateCcw,
+  AlertTriangle,
   ExternalLink,
   CheckCircle2,
-  AlertTriangle,
+  ArrowRight,
 } from 'lucide-react';
 import { SpatialCaseNode } from './SpatialHolodeck.js';
+import { formatPlainStage } from '../../lib/plainLanguage.js';
 
 interface HoloDossierDrawerProps {
   node: SpatialCaseNode | null;
@@ -28,8 +24,6 @@ export function HoloDossierDrawer({
   onClose,
   temporalOffsetDays,
   activeIntervention,
-  onAdvanceStage,
-  onReturnCase,
 }: HoloDossierDrawerProps) {
   if (!node) return null;
 
@@ -51,15 +45,16 @@ export function HoloDossierDrawer({
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-graphite-border">
         <div>
-          <span className="text-[10px] font-mono uppercase tracking-widest text-platinum block">
-            Holo-Dossier Lock
+          <span className="text-[10px] uppercase tracking-wider text-platinum block">
+            Application dossier
           </span>
           <h3 className="text-base font-bold text-silver-bright font-mono">{node.applicationNumber}</h3>
         </div>
 
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg bg-obsidian border border-graphite-border hover:bg-gunmetal text-slate-muted hover:text-silver"
+          aria-label="Close dossier drawer"
+          className="p-1.5 rounded-lg bg-obsidian border border-graphite-border hover:bg-gunmetal text-slate-muted hover:text-silver cursor-pointer"
         >
           <X size={16} />
         </button>
@@ -69,15 +64,15 @@ export function HoloDossierDrawer({
         {/* Institution Info */}
         <div>
           <h4 className="text-sm font-semibold text-silver">{node.institutionName}</h4>
-          <span className="text-xs font-mono text-slate-muted">
-            {node.region} Region • Stage: {(node.stage || '').replace(/_/g, ' ')}
+          <span className="text-xs text-slate-muted">
+            {node.region} region • Stage: {formatPlainStage(node.stage)}
           </span>
         </div>
 
         {/* 4D Temporal Telemetry */}
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 bg-obsidian rounded-xl border border-graphite-border">
-            <span className="text-[10px] font-mono text-slate-muted uppercase">Base Risk Score</span>
+            <span className="text-[10px] text-slate-muted uppercase">Base risk score</span>
             <p className="text-xl font-bold font-mono text-silver-bright mt-0.5">{node.riskScore} / 100</p>
           </div>
 
@@ -90,7 +85,7 @@ export function HoloDossierDrawer({
                 : 'bg-obsidian border-graphite-border text-platinum'
             }`}
           >
-            <span className="text-[10px] font-mono uppercase font-bold">Projected 4D Risk</span>
+            <span className="text-[10px] uppercase font-semibold">Projected risk</span>
             <p className="text-xl font-bold font-mono mt-0.5">{projectedRisk} / 100</p>
           </div>
         </div>
@@ -98,52 +93,52 @@ export function HoloDossierDrawer({
         {/* Active Temporal Alerts */}
         {temporalOffsetDays > 0 && node.hasExpiringLease && (
           <div className="p-3 rounded-xl bg-status-critical/15 border border-status-critical/30 space-y-1">
-            <div className="flex items-center gap-1.5 text-status-critical text-xs font-bold font-mono">
+            <div className="flex items-center gap-1.5 text-status-critical text-xs font-semibold">
               <AlertTriangle size={14} />
-              <span>4D Prediction: Land Lease Expiration</span>
+              <span>Projected: Land lease expiration</span>
             </div>
-            <p className="text-[11px] text-silver/80">
-              In this timeline, campus plot lease expires in {node.leaseExpiresInDays} days without renewal deed.
+            <p className="text-xs text-silver/80">
+              In this timeline, campus plot lease expires in {node.leaseExpiresInDays} days without renewal proof.
             </p>
           </div>
         )}
 
         {/* Quick Statutory Actions */}
         <div className="space-y-2 pt-2">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-platinum font-semibold block">
-            Direct Statutory Interventions
+          <span className="text-xs uppercase tracking-wider text-platinum font-semibold block">
+            Actions
           </span>
 
           <Link
             to={`/applications/${node.id}`}
-            className="w-full platinum-button-primary py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2"
+            className="w-full platinum-button-primary py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>Open Complete Application Dossier</span>
+            <span>View application</span>
             <ExternalLink size={13} />
           </Link>
 
           <Link
             to={`/futurelab?appId=${node.id}`}
-            className="w-full platinum-button-secondary py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2"
+            className="w-full platinum-button-secondary py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>Run Deep Counterfactual Scenario</span>
+            <span>Run simulation</span>
             <ArrowRight size={13} />
           </Link>
         </div>
 
         {/* Prerequisites Checklist */}
         <div className="space-y-2 pt-2 border-t border-graphite-border">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-platinum font-semibold block">
-            Stage Prerequisites
+          <span className="text-xs uppercase tracking-wider text-platinum font-semibold block">
+            Stage prerequisites
           </span>
-          <div className="space-y-1.5 text-xs font-mono">
+          <div className="space-y-1.5 text-xs">
             <div className="p-2 rounded bg-obsidian border border-graphite-border text-status-success flex items-center gap-2">
               <CheckCircle2 size={13} />
-              <span>Statutory Processing Fee Cleared</span>
+              <span>Processing fee cleared</span>
             </div>
             <div className="p-2 rounded bg-obsidian border border-graphite-border text-status-success flex items-center gap-2">
               <CheckCircle2 size={13} />
-              <span>Affidavit Upload & Biometrics Verified</span>
+              <span>Affidavit upload verified</span>
             </div>
             <div
               className={`p-2 rounded border flex items-center gap-2 ${
@@ -153,7 +148,7 @@ export function HoloDossierDrawer({
               }`}
             >
               {node.hasExpiringLease ? <AlertTriangle size={13} /> : <CheckCircle2 size={13} />}
-              <span>30-Year Registered Land Lease Deed</span>
+              <span>30-year registered land lease deed</span>
             </div>
           </div>
         </div>
@@ -161,4 +156,5 @@ export function HoloDossierDrawer({
     </div>
   );
 }
+
 export default HoloDossierDrawer;

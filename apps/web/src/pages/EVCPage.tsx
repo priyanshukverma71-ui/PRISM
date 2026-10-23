@@ -4,18 +4,12 @@ import { Link } from 'react-router-dom';
 import {
   CalendarCheck,
   Calendar,
-  Clock,
-  AlertTriangle,
-  UserCheck,
   FileCheck,
-  Plus,
   ArrowRight,
-  RotateCcw,
-  ShieldAlert,
-  Search,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
+import { formatStatus, formatCategory } from '../lib/plainLanguage.js';
 
 export function EVCPage() {
   const { user } = useAuth();
@@ -79,7 +73,7 @@ export function EVCPage() {
 
     const isReschedule = selectedEvc.status === 'SCHEDULED';
     if (isReschedule && !reschedulingReason) {
-      alert('A recorded reason is mandatory when rescheduling an appointed EVC visit.');
+      alert('A reason is required when rescheduling an inspection.');
       return;
     }
 
@@ -111,7 +105,7 @@ export function EVCPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-silver-bright tracking-tight">Expert Visit Committee (EVC) Workspace</h2>
+          <h1 className="text-xl font-bold text-silver-bright tracking-tight">Expert inspection workspace</h1>
           <p className="text-xs text-slate-muted">Physical and virtual inspection scheduling, committee constitution, and findings submission</p>
         </div>
       </div>
@@ -122,42 +116,45 @@ export function EVCPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-obsidian border border-graphite-border rounded-lg px-2.5 py-1.5 text-xs text-silver focus:outline-none"
+            aria-label="Filter by visit status"
+            className="bg-obsidian border border-graphite-border rounded-lg px-2.5 py-1.5 text-xs text-silver focus:outline-none cursor-pointer"
           >
-            <option value="">All Visit Statuses</option>
-            <option value="PENDING_SCHEDULE">Pending Schedule</option>
+            <option value="">All visit statuses</option>
+            <option value="PENDING_SCHEDULE">Pending schedule</option>
             <option value="SCHEDULED">Scheduled</option>
-            <option value="IN_PROGRESS">In Progress</option>
+            <option value="IN_PROGRESS">In progress</option>
             <option value="COMPLETED">Completed</option>
           </select>
 
           <select
             value={regionFilter}
             onChange={(e) => setRegionFilter(e.target.value)}
-            className="bg-obsidian border border-graphite-border rounded-lg px-2.5 py-1.5 text-xs text-silver focus:outline-none"
+            aria-label="Filter by region"
+            className="bg-obsidian border border-graphite-border rounded-lg px-2.5 py-1.5 text-xs text-silver focus:outline-none cursor-pointer"
           >
-            <option value="">All Regions</option>
+            <option value="">All regions</option>
             <option value="Western">Western</option>
             <option value="Northern">Northern</option>
             <option value="Southern">Southern</option>
             <option value="Eastern">Eastern</option>
             <option value="South-Western">South-Western</option>
+            <option value="Central">Central</option>
           </select>
         </div>
 
-        <span className="text-xs font-mono text-slate-muted">
-          Showing {evcVisits?.length || 0} Inspection Registers
+        <span className="text-xs text-slate-muted">
+          Tracking {evcVisits?.length || 0} inspection records
         </span>
       </div>
 
       {/* EVC Visits Cards & Table */}
       <div className="grid grid-cols-1 gap-4">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-muted font-mono text-xs">Loading EVC inspection registers...</div>
+          <div className="p-8 text-center text-slate-muted font-mono text-xs">Loading inspection registers...</div>
         ) : (evcVisits || []).length === 0 ? (
           <div className="platinum-card p-12 text-center text-slate-muted rounded-xl border border-graphite-border">
             <Calendar size={32} className="mx-auto mb-2 text-gunmetal-light" />
-            <p className="text-sm font-medium text-silver">No EVC visits match current filter</p>
+            <p className="text-sm font-medium text-silver">No inspection visits found. Try changing your filters.</p>
           </div>
         ) : (
           evcVisits!.map((evc: any) => (
@@ -167,11 +164,11 @@ export function EVCPage() {
             >
               <div className="space-y-1.5 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-sm text-silver-bright">
+                  <span className="font-mono font-medium text-sm text-silver-bright">
                     {evc.application.applicationNumber}
                   </span>
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
                       evc.status === 'COMPLETED'
                         ? 'bg-status-success/15 text-status-success border-status-success/30'
                         : evc.status === 'SCHEDULED'
@@ -179,10 +176,10 @@ export function EVCPage() {
                         : 'bg-status-warning/15 text-status-warning border-status-warning/30'
                     }`}
                   >
-                    {evc.status}
+                    {formatStatus(evc.status)}
                   </span>
-                  <span className="text-[10px] font-mono text-slate-muted">
-                    {evc.visitType} Visit • {evc.application.region} Region
+                  <span className="text-[10px] text-slate-muted">
+                    {formatCategory(evc.visitType)} visit • {evc.application.region} region
                   </span>
                 </div>
 
@@ -191,11 +188,11 @@ export function EVCPage() {
                 </p>
 
                 {/* Prerequisite satisfaction status */}
-                <div className="flex items-center gap-4 text-[11px] font-mono pt-1">
+                <div className="flex items-center gap-4 text-[11px] pt-1">
                   <span>
                     Prerequisites:{' '}
-                    <span className={evc.prerequisitesSatisfied ? 'text-status-success font-bold' : 'text-status-critical font-bold'}>
-                      {evc.prerequisitesSatisfied ? 'CERTIFIED SATISFIED' : 'BLOCKED BY SCRUTINY DEFICIENCIES'}
+                    <span className={evc.prerequisitesSatisfied ? 'text-status-success font-medium' : 'text-status-critical font-medium'}>
+                      {evc.prerequisitesSatisfied ? 'Satisfied' : 'Pending review clarification'}
                     </span>
                   </span>
 
@@ -218,27 +215,28 @@ export function EVCPage() {
                 {evc.status !== 'COMPLETED' && (
                   <button
                     onClick={() => handleOpenSchedule(evc)}
-                    className="platinum-button-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                    className="platinum-button-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                   >
                     <CalendarCheck size={14} />
-                    <span>{evc.status === 'SCHEDULED' ? 'Reschedule Date' : 'Schedule Visit'}</span>
+                    <span>{evc.status === 'SCHEDULED' ? 'Reschedule date' : 'Schedule inspection'}</span>
                   </button>
                 )}
 
                 {evc.status === 'SCHEDULED' && (
                   <button
                     onClick={() => handleOpenFindings(evc)}
-                    className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-status-success border-status-success/40"
+                    className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-status-success border-status-success/40 cursor-pointer"
                   >
                     <FileCheck size={14} />
-                    <span>Submit Findings</span>
+                    <span>Submit findings</span>
                   </button>
                 )}
 
                 <Link
                   to={`/applications/${evc.applicationId}`}
                   className="platinum-button-secondary p-1.5 rounded-lg text-slate-muted hover:text-silver"
-                  title="Open Dossier"
+                  title="View application"
+                  aria-label="View application"
                 >
                   <ArrowRight size={16} />
                 </Link>
@@ -248,28 +246,20 @@ export function EVCPage() {
         )}
       </div>
 
-      {/* Schedule EVC Visit Modal */}
+      {/* Schedule Modal */}
       {scheduleModalOpen && selectedEvc && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="platinum-card max-w-md w-full p-6 rounded-2xl border border-graphite-border space-y-4">
-            <h3 className="text-sm font-bold text-silver-bright flex items-center gap-2">
-              <CalendarCheck size={16} className="text-platinum" />
-              <span>Schedule Expert Visit Committee (EVC)</span>
+            <h3 className="text-sm font-bold text-silver-bright">
+              {selectedEvc.status === 'SCHEDULED' ? 'Reschedule inspection' : 'Schedule expert inspection'}
             </h3>
             <p className="text-xs text-slate-muted">
-              {selectedEvc.application.institution.name} ({selectedEvc.application.applicationNumber})
+              {selectedEvc.application?.institution?.name} ({selectedEvc.application?.applicationNumber})
             </p>
-
-            {!selectedEvc.prerequisitesSatisfied && (
-              <div className="p-3 rounded-lg bg-status-critical/15 border border-status-critical/40 text-status-critical text-xs space-y-1">
-                <p className="font-bold font-mono">Prerequisite Hold Detected:</p>
-                <p>Mandatory scrutiny prerequisites are not satisfied. Normal scheduling is blocked unless administrative override is enabled.</p>
-              </div>
-            )}
 
             <form onSubmit={handleScheduleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-platinum mb-1 font-mono">Proposed Inspection Date *</label>
+                <label className="block text-xs font-medium text-platinum mb-1">Inspection date *</label>
                 <input
                   type="date"
                   value={scheduledDate}
@@ -281,14 +271,12 @@ export function EVCPage() {
 
               {selectedEvc.status === 'SCHEDULED' && (
                 <div>
-                  <label className="block text-xs font-medium text-platinum mb-1 font-mono">
-                    Mandatory Rescheduling Reason *
-                  </label>
+                  <label className="block text-xs font-medium text-platinum mb-1">Rescheduling explanation *</label>
                   <textarea
                     value={reschedulingReason}
                     onChange={(e) => setReschedulingReason(e.target.value)}
                     rows={3}
-                    placeholder="Provide justification per APH norms (e.g. Panel flight disruption, unforeseen local administrative holiday)..."
+                    placeholder="Provide reason for changing the scheduled inspection date..."
                     className="w-full bg-obsidian border border-graphite-border rounded-lg p-2 text-xs text-silver focus:outline-none"
                     required
                   />
@@ -299,7 +287,7 @@ export function EVCPage() {
                 <button
                   type="button"
                   onClick={() => setScheduleModalOpen(false)}
-                  className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs"
+                  className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -308,7 +296,7 @@ export function EVCPage() {
                   disabled={scheduleMutation.isPending}
                   className="platinum-button-primary px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
                 >
-                  {scheduleMutation.isPending ? 'Confirming...' : 'Confirm Schedule'}
+                  {scheduleMutation.isPending ? 'Saving...' : 'Confirm schedule'}
                 </button>
               </div>
             </form>
@@ -316,26 +304,23 @@ export function EVCPage() {
         </div>
       )}
 
-      {/* Findings Submission Modal */}
+      {/* Findings Modal */}
       {findingsModalOpen && selectedEvc && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="platinum-card max-w-lg w-full p-6 rounded-2xl border border-graphite-border space-y-4">
-            <h3 className="text-sm font-bold text-silver-bright flex items-center gap-2">
-              <FileCheck size={16} className="text-status-success" />
-              <span>Record EVC Inspection Findings & Report Hash</span>
-            </h3>
+          <div className="platinum-card max-w-md w-full p-6 rounded-2xl border border-graphite-border space-y-4">
+            <h3 className="text-sm font-bold text-silver-bright">Submit inspection findings</h3>
             <p className="text-xs text-slate-muted">
-              Findings are cryptographically hashed and recorded into the immutable audit flight recorder.
+              {selectedEvc.application?.institution?.name} ({selectedEvc.application?.applicationNumber})
             </p>
 
             <form onSubmit={handleFindingsSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-platinum mb-1 font-mono">Inspection Findings & Lab Verification Notes *</label>
+                <label className="block text-xs font-medium text-platinum mb-1">Committee findings &amp; recommendation *</label>
                 <textarea
                   value={findingsText}
                   onChange={(e) => setFindingsText(e.target.value)}
-                  rows={5}
-                  placeholder="Record summary of physical laboratories, instructional area, fire safety devices, faculty presence, and student amenities verified on campus..."
+                  rows={4}
+                  placeholder="Record verification of physical facilities, faculty records, and compliance..."
                   className="w-full bg-obsidian border border-graphite-border rounded-lg p-2 text-xs text-silver focus:outline-none"
                   required
                 />
@@ -345,16 +330,16 @@ export function EVCPage() {
                 <button
                   type="button"
                   onClick={() => setFindingsModalOpen(false)}
-                  className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs"
+                  className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={scheduleMutation.isPending || findingsText.length < 10}
-                  className="platinum-button-primary px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-50"
+                  disabled={scheduleMutation.isPending}
+                  className="platinum-button-primary px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
                 >
-                  {scheduleMutation.isPending ? 'Signing Findings...' : 'Submit & Sign Report'}
+                  {scheduleMutation.isPending ? 'Saving...' : 'Submit findings'}
                 </button>
               </div>
             </form>
@@ -364,4 +349,5 @@ export function EVCPage() {
     </div>
   );
 }
+
 export default EVCPage;

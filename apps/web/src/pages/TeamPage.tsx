@@ -2,18 +2,14 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Users,
-  Shield,
   MapPin,
   Building,
   UserCheck,
-  CheckCircle,
-  Plus,
   Mail,
-  ShieldCheck,
-  ArrowRight,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
+import { formatRole, formatStatus } from '../lib/plainLanguage.js';
 
 export function TeamPage() {
   const { user: currentUser, switchRole } = useAuth();
@@ -29,7 +25,7 @@ export function TeamPage() {
     return (
       <div className="p-12 text-center text-slate-muted font-mono text-xs">
         <span className="w-2.5 h-2.5 rounded-full bg-platinum animate-ping inline-block mr-2" />
-        Loading AICTE Regulatory Team Directory...
+        Loading team directory...
       </div>
     );
   }
@@ -69,13 +65,13 @@ export function TeamPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-graphite-border pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-silver-bright tracking-tight">Regulatory Team &amp; Access Control</h1>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-platinum/15 text-platinum border border-platinum/30">
-              ROLE-BASED DIRECTORY
+            <h1 className="text-xl font-bold text-silver-bright tracking-tight">Team directory</h1>
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gunmetal text-platinum border border-graphite-border">
+              Access control
             </span>
           </div>
           <p className="text-xs text-slate-muted mt-0.5">
-            Authorized regional officers, bureau leads, expert committee reviewers, and system administrators
+            Authorized regional officers, bureau leads, expert committee reviewers, and administrators
           </p>
         </div>
 
@@ -98,13 +94,13 @@ export function TeamPage() {
             <button
               key={role}
               onClick={() => setRoleFilter(role)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                 roleFilter === role
-                  ? 'bg-platinum text-obsidian font-bold shadow-platinum'
+                  ? 'bg-platinum text-obsidian font-semibold'
                   : 'text-slate-muted hover:text-silver'
               }`}
             >
-              {role === 'ALL' ? 'All Roles' : String(role).replace(/_/g, ' ')}
+              {role === 'ALL' ? 'All roles' : formatRole(role)}
             </button>
           )
         )}
@@ -118,15 +114,15 @@ export function TeamPage() {
           return (
             <div
               key={u.id}
-              className={`platinum-card p-4 rounded-xl border transition-all space-y-3 ${
+              className={`platinum-card p-4 rounded-xl border transition-colors space-y-3 ${
                 isCurrent
-                  ? 'border-platinum/80 bg-gradient-to-b from-gunmetal/60 to-obsidian shadow-platinum'
+                  ? 'border-platinum/60 bg-gunmetal/30'
                   : 'border-graphite-border hover:border-platinum/40'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-gunmetal border border-graphite-border flex items-center justify-center font-bold text-silver-bright font-mono text-xs">
+                  <div className="w-9 h-9 rounded-full bg-gunmetal border border-graphite-border flex items-center justify-center font-bold text-silver-bright text-xs">
                     {u.name
                       .split(' ')
                       .map((n: string) => n[0])
@@ -138,8 +134,8 @@ export function TeamPage() {
                     <h3 className="text-xs font-bold text-silver-bright flex items-center gap-1.5">
                       <span>{u.name}</span>
                       {isCurrent && (
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-platinum text-obsidian font-mono font-bold">
-                          YOU
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-platinum text-obsidian font-medium">
+                          You
                         </span>
                       )}
                     </h3>
@@ -150,8 +146,8 @@ export function TeamPage() {
                   </div>
                 </div>
 
-                <span className={`text-[10px] px-2 py-0.5 rounded border font-mono font-bold ${getRoleBadge(u.role)}`}>
-                  {u.role ? u.role.replace(/_/g, ' ') : 'MEMBER'}
+                <span className={`text-[10px] px-2 py-0.5 rounded border font-medium ${getRoleBadge(u.role)}`}>
+                  {formatRole(u.role) || 'Member'}
                 </span>
               </div>
 
@@ -162,7 +158,7 @@ export function TeamPage() {
                       <MapPin size={11} className="text-platinum" />
                       <span>Jurisdiction:</span>
                     </span>
-                    <span className="font-mono text-silver font-semibold">{u.region} Region</span>
+                    <span className="text-silver font-medium">{u.region} region</span>
                   </div>
                 )}
 
@@ -177,10 +173,10 @@ export function TeamPage() {
                 )}
 
                 <div className="flex items-center justify-between text-slate-muted">
-                  <span>Account Status:</span>
-                  <span className="text-status-success font-mono font-semibold flex items-center gap-1">
+                  <span>Status:</span>
+                  <span className="text-status-success font-medium flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-status-success" />
-                    <span>{u.status}</span>
+                    <span>{formatStatus(u.status)}</span>
                   </span>
                 </div>
               </div>
@@ -188,10 +184,10 @@ export function TeamPage() {
               <div className="pt-2 border-t border-graphite-border flex items-center justify-between">
                 <button
                   onClick={() => switchRole(u.role)}
-                  className="w-full py-1 px-2.5 rounded-lg text-[11px] font-semibold platinum-button-secondary flex items-center justify-center gap-1.5"
+                  className="w-full py-1.5 px-2.5 rounded-lg text-xs font-medium platinum-button-secondary flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <UserCheck size={12} />
-                  <span>Switch to {u.name.split(' ')[0]}'s Persona</span>
+                  <span>Switch account to {u.name.split(' ')[0]}</span>
                 </button>
               </div>
             </div>

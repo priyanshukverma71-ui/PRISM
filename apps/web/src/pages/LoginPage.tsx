@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.js';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ChevronDown } from 'lucide-react';
+import { safeFormatError } from '../lib/plainLanguage.js';
 
 export function LoginPage() {
   const { login, switchRole } = useAuth();
@@ -22,7 +23,7 @@ export function LoginPage() {
       await login(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials. Please verify and try again.');
+      setError(safeFormatError(err, 'Invalid email address or password. Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -35,7 +36,7 @@ export function LoginPage() {
       await switchRole(role);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Demo login failed');
+      setError(safeFormatError(err, 'We could not switch accounts. Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -44,15 +45,15 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-obsidian text-silver flex flex-col justify-center items-center px-4 py-12 relative">
       <div className="w-full max-w-md">
-        {/* Subtle Brand Mark */}
+        {/* Brand Mark */}
         <div className="flex justify-center mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gunmetal border border-platinum/30 flex items-center justify-center shadow-platinum">
+          <div className="w-10 h-10 rounded-xl bg-gunmetal border border-graphite-border flex items-center justify-center">
             <span className="font-mono font-bold text-silver-bright text-lg">Δ</span>
           </div>
         </div>
 
         {/* Focused Login Card */}
-        <div className="platinum-card rounded-2xl p-8 border border-graphite-border shadow-2xl">
+        <div className="platinum-card rounded-2xl p-8 border border-graphite-border shadow-xl">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-silver-bright tracking-tight">
               Welcome back to PRISM
@@ -80,7 +81,7 @@ export function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@aicte.gov.in"
-                  className="w-full bg-obsidian border border-graphite-border rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-silver placeholder-slate-subtle focus:outline-none focus:border-platinum transition-colors"
+                  className="w-full bg-obsidian border border-graphite-border rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-silver placeholder-slate-muted focus:outline-none focus:border-platinum transition-colors"
                   required
                 />
               </div>
@@ -99,7 +100,7 @@ export function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-obsidian border border-graphite-border rounded-xl pl-10 pr-10 py-2.5 text-xs text-silver placeholder-slate-subtle focus:outline-none focus:border-platinum transition-colors"
+                  className="w-full bg-obsidian border border-graphite-border rounded-xl pl-10 pr-10 py-2.5 text-xs text-silver placeholder-slate-muted focus:outline-none focus:border-platinum transition-colors"
                   required
                 />
                 <button
@@ -116,39 +117,39 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-2 platinum-button-primary py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 transition-all"
+              className="w-full mt-2 platinum-button-primary py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 transition-colors"
             >
-              <span>{submitting ? 'Signing in...' : 'Sign In'}</span>
+              <span>{submitting ? 'Signing in...' : 'Sign in'}</span>
               <ArrowRight size={14} />
             </button>
           </form>
 
-          {/* Secondary / Demo Access moved out of main focus */}
-          <div className="mt-6 pt-5 border-t border-graphite-border/70 text-center">
+          {/* Secondary / Demo Access */}
+          <div className="mt-6 pt-5 border-t border-graphite-border text-center">
             <button
               type="button"
               onClick={() => setShowDemoPersonas(!showDemoPersonas)}
-              className="text-[11px] font-mono text-slate-muted hover:text-platinum transition-colors inline-flex items-center gap-1 cursor-pointer"
+              className="text-xs text-slate-muted hover:text-platinum transition-colors inline-flex items-center gap-1 cursor-pointer"
             >
-              <span>Demo evaluation personas</span>
+              <span>Demo evaluation accounts</span>
               <ChevronDown size={13} className={`transform transition-transform ${showDemoPersonas ? 'rotate-180' : ''}`} />
             </button>
 
             {showDemoPersonas && (
               <div className="grid grid-cols-2 gap-1.5 mt-3 pt-2 text-left animate-in fade-in duration-200">
                 {[
-                  { label: 'System Admin', role: 'SYSTEM_ADMIN' },
-                  { label: 'Regional Officer', role: 'REGIONAL_OFFICER' },
-                  { label: 'Bureau Officer', role: 'BUREAU_OFFICER' },
-                  { label: 'Committee Reviewer', role: 'COMMITTEE_REVIEWER' },
-                  { label: 'Institution (VJTI)', role: 'INSTITUTION_USER' },
+                  { label: 'System administrator', role: 'SYSTEM_ADMIN' },
+                  { label: 'Regional officer', role: 'REGIONAL_OFFICER' },
+                  { label: 'Bureau officer', role: 'BUREAU_OFFICER' },
+                  { label: 'Committee reviewer', role: 'COMMITTEE_REVIEWER' },
+                  { label: 'Institution user (VJTI)', role: 'INSTITUTION_USER' },
                   { label: 'Auditor (CAG)', role: 'AUDITOR' },
                 ].map((p) => (
                   <button
                     key={p.role}
                     type="button"
                     onClick={() => handleQuickLogin(p.role)}
-                    className="platinum-button-secondary py-1 px-2 rounded-lg text-[10px] font-mono truncate text-left cursor-pointer"
+                    className="platinum-button-secondary py-1.5 px-2 rounded-lg text-[11px] truncate text-left cursor-pointer"
                   >
                     ⚡ {p.label}
                   </button>
@@ -158,12 +159,13 @@ export function LoginPage() {
           </div>
         </div>
 
-        {/* Subtle, understated footer notice */}
-        <p className="text-[11px] text-slate-muted/70 text-center mt-6 font-mono">
-          PRISM // Proactive Regulatory Intelligence & Status Monitoring
+        {/* Brand Subtitle Footer */}
+        <p className="text-center text-[11px] text-slate-muted mt-6">
+          PRISM • Proactive Regulatory Intelligence &amp; Status Monitoring
         </p>
       </div>
     </div>
   );
 }
+
 export default LoginPage;

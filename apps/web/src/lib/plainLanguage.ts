@@ -1,60 +1,183 @@
 /**
  * Plain Language Utilities for PRISM
- * Replaces cryptic technical labels with human-understandable operational statuses
- * and provides structured 4-part alert anatomy.
+ * Enterprise plain-language dictionaries and label mappings.
+ * Eliminates underscores, raw database keys, and technical identifiers from all visible UI text.
  */
 
-export interface PlainAlertAnatomy {
-  issue: string;
-  whyItMatters: string;
-  owner: string;
-  howToResolve: string;
-  urgencyText: string;
-  actionUrl: string;
-  actionLabel: string;
+/**
+ * Robust fallback that safely converts snake_case or SCREAMING_SNAKE_CASE
+ * into clean, natural Sentence case.
+ */
+export function toSentenceCase(text?: string | null): string {
+  if (!text || typeof text !== 'string') return '';
+  const cleaned = text
+    .trim()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ');
+
+  if (!cleaned) return '';
+  const lower = cleaned.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
+/**
+ * Universal display label dictionary for known statuses, fields, and identifiers.
+ */
+const DISPLAY_LABELS: Record<string, string> = {
+  // Required Priority 1 examples
+  application_status: 'Application status',
+  risk_score: 'Risk score',
+  missing_documents: 'Missing documents',
+  pending_review: 'Waiting for review',
+  workflow_progress: 'Application progress',
+  last_updated: 'Last updated',
+  evidence_verification: 'Document verification',
+  futurelab_simulation: 'What-if simulation',
+
+  // Stages & Statuses
+  DRAFT: 'Draft',
+  SUBMITTED: 'Submitted — waiting for review',
+  UNDER_SCRUTINY: 'Under review',
+  CLARIFICATION_REQUIRED: 'Action required — clarification needed',
+  RESUBMITTED: 'Resubmitted — waiting for review',
+  EVC_PENDING: 'Inspection pending',
+  EVC_SCHEDULED: 'Inspection scheduled',
+  EVC_COMPLETED: 'Inspection completed',
+  COMMITTEE_REVIEW: 'Under committee review',
+  AWAITING_DECISION: 'Awaiting final decision',
+  AWAITING_AUTHORISED_DECISION: 'Awaiting final decision',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  CLOSED: 'Closed',
+  PENDING: 'Pending submission',
+  PENDING_VERIFICATION: 'Waiting for review',
+  PENDING_SCHEDULE: 'Waiting to be scheduled',
+  SCHEDULED: 'Scheduled',
+  IN_PROGRESS: 'In progress',
+  COMPLETED: 'Completed',
+  VERIFIED: 'Verified & compliant',
+  DEFICIENT: 'Clarification needed',
+  EXPIRED: 'Expired',
+  UNRESOLVED: 'Action needed',
+  RESOLVED: 'Resolved',
+  ACTIVE: 'Active',
+  DISABLED: 'Disabled',
+
+  // Severities
+  CRITICAL: 'Critical',
+  HIGH: 'High',
+  MEDIUM: 'Medium',
+  LOW: 'Low',
+  WARNING: 'Warning',
+
+  // Application Categories
+  EXTENSION_OF_APPROVAL: 'Extension of approval',
+  NEW_INSTITUTION: 'New institution',
+  INTAKE_INCREASE: 'Intake increase',
+  NEW_COURSE: 'New course',
+  FULL_CYCLE: 'Standard review cycle',
+  ONLY_SCRUTINY: 'Accelerated review cycle',
+
+  // Compliance Categories & Document Types
+  LAND_BUILDING: 'Land and building',
+  SAFETY_NOC: 'Safety clearance',
+  FACULTY_CADRE: 'Faculty cadre and salary',
+  AFFILIATION: 'University affiliation',
+  LEASE_AGREEMENT: 'Land lease agreement',
+  BUILDING_STABILITY: 'Building stability certificate',
+  FIRE_SAFETY_CERTIFICATE: 'Fire safety certificate',
+  NOC_STATE_GOVT: 'State government clearance',
+
+  // Roles
+  SYSTEM_ADMIN: 'System administrator',
+  REGIONAL_OFFICER: 'Regional officer',
+  BUREAU_OFFICER: 'Bureau officer',
+  COMMITTEE_REVIEWER: 'Committee reviewer',
+  INSTITUTION_USER: 'Institution user',
+  AUDITOR: 'Auditor',
+
+  // Action & Event Types
+  USER_LOGIN: 'User login',
+  APPLICATION_CREATE: 'Application created',
+  STAGE_TRANSITION: 'Stage updated',
+  COMPLIANCE_VERIFIED: 'Document verified',
+  EVC_UPDATED: 'Inspection schedule updated',
+  ALERT_GENERATED: 'Alert issued',
+  SIMULATION_RUN: 'Simulation executed',
+
+  // Entity Targets
+  APPLICATION: 'Application',
+  COMPLIANCE: 'Compliance requirement',
+  EVC: 'Inspection committee',
+  ALERT: 'Alert',
+  WORKFLOW_RULE: 'Workflow rule',
+  DOCUMENT: 'Document',
+
+  // Simulation & Interventions
+  NONE: 'Standard timeline',
+  FAST_TRACK_EVC: 'Central inspection pool',
+  SPECIAL_SCRUTINY_DRIVE: 'Accelerated review drive',
+  PROVISIONAL_UNDERTAKING: 'Provisional undertaking with escrow',
+  ON_TIME: 'On time',
+  LATE_5_DAYS: '5 days late',
+  LATE_15_DAYS: '15 days late',
+};
+
+/**
+ * Type-safe display-label mapping with safe human-readable fallback
+ */
+export function formatDisplayLabel(key?: string | null): string {
+  if (!key || typeof key !== 'string') return '';
+  if (DISPLAY_LABELS[key]) {
+    return DISPLAY_LABELS[key];
+  }
+  return toSentenceCase(key);
+}
+
+export function formatRole(role?: string | null): string {
+  return formatDisplayLabel(role);
+}
+
+export function formatCategory(category?: string | null): string {
+  return formatDisplayLabel(category);
+}
+
+export function formatStatus(status?: string | null): string {
+  return formatDisplayLabel(status);
+}
+
+export function formatSeverity(severity?: string | null): string {
+  return formatDisplayLabel(severity);
+}
+
+export function formatActionType(actionType?: string | null): string {
+  return formatDisplayLabel(actionType);
+}
+
+export function formatEntityType(entityType?: string | null): string {
+  return formatDisplayLabel(entityType);
+}
+
+export function formatDocumentType(docType?: string | null): string {
+  return formatDisplayLabel(docType);
+}
+
+export function formatIntervention(intervention?: string | null): string {
+  return formatDisplayLabel(intervention);
 }
 
 /**
  * Converts technical workflow stage enums into plain-language status
  */
-export function formatPlainStage(stage?: string): string {
-  if (!stage) return 'In Review';
-  switch (stage) {
-    case 'DRAFT':
-      return 'In Preparation — Not Yet Submitted';
-    case 'SUBMITTED':
-      return 'Submitted — Waiting for Initial Scrutiny';
-    case 'UNDER_SCRUTINY':
-      return 'Under Scrutiny — Document Verification in Progress';
-    case 'CLARIFICATION_REQUIRED':
-      return 'Action Required — Deficiency Reported';
-    case 'RESUBMITTED':
-      return 'Resubmitted — Awaiting Re-Scrutiny';
-    case 'EVC_PENDING':
-      return 'Visit Pending — Expert Committee to be Appointed';
-    case 'EVC_SCHEDULED':
-      return 'Visit Scheduled — Inspection Impending';
-    case 'EVC_COMPLETED':
-      return 'Visit Completed — Committee Report Awaiting Review';
-    case 'COMMITTEE_REVIEW':
-      return 'Under Committee Review — SAC/SHC in Session';
-    case 'AWAITING_AUTHORISED_DECISION':
-      return 'Awaiting Final Statutory Sign-Off';
-    case 'APPROVED':
-      return 'Statutory Approval Granted';
-    case 'REJECTED':
-      return 'Application Rejected with Reasons';
-    case 'CLOSED':
-      return 'Case Closed';
-    default:
-      return String(stage).replace(/_/g, ' ');
-  }
+export function formatPlainStage(stage?: string | null): string {
+  if (!stage) return 'In review';
+  return formatDisplayLabel(stage);
 }
 
 /**
  * Calculates human-understandable relative days remaining
  */
-export function formatDaysRemaining(targetDate?: string | Date): {
+export function formatDaysRemaining(targetDate?: string | Date | null): {
   text: string;
   days: number;
   isOverdue: boolean;
@@ -122,8 +245,8 @@ export function formatDaysRemaining(targetDate?: string | Date): {
  * Formats compliance obligation status into plain language with explicit "Next action:"
  */
 export function formatPlainComplianceStatus(
-  status: string,
-  dueDate?: string | Date
+  status?: string | null,
+  dueDate?: string | Date | null
 ): {
   label: string;
   badgeStyle: string;
@@ -134,14 +257,14 @@ export function formatPlainComplianceStatus(
   switch (status) {
     case 'VERIFIED':
       return {
-        label: 'Verified & Compliant',
+        label: 'Verified & compliant',
         badgeStyle: 'bg-status-success/15 text-status-success border-status-success/30',
         nextAction: 'Next action: Compliant. No further action needed.',
       };
 
     case 'DEFICIENT':
       return {
-        label: 'Action Required — Deficiency Reported',
+        label: 'Action required — deficiency reported',
         badgeStyle: 'bg-status-critical/15 text-status-critical border-status-critical/30',
         nextAction: 'Next action: Upload the missing evidence to rectify deficiency',
       };
@@ -155,9 +278,9 @@ export function formatPlainComplianceStatus(
 
     case 'SUBMITTED':
       return {
-        label: 'Waiting for Document Verification',
+        label: 'Waiting for document verification',
         badgeStyle: 'bg-blue-950/60 text-blue-300 border-blue-800',
-        nextAction: 'Next action: Regional Officer to inspect evidence against APH checklist',
+        nextAction: 'Next action: Regional officer to inspect evidence against statutory checklist',
       };
 
     case 'PENDING':
@@ -177,86 +300,96 @@ export function formatPlainComplianceStatus(
         };
       }
       return {
-        label: `Pending Submission — ${timing.text}`,
+        label: `Pending submission — ${timing.text}`,
         badgeStyle: 'bg-gunmetal text-silver border-graphite-border',
         nextAction: 'Next action: Upload verified documentary proof',
       };
   }
 }
 
+export interface PlainAlertAnatomy {
+  issue: string;
+  whyItMatters: string;
+  owner: string;
+  howToResolve: string;
+  urgencyText: string;
+  actionUrl: string;
+  actionLabel: string;
+}
+
 /**
- * Formats every alert into the 4-part anatomy:
+ * Formats every alert into the 4-part plain language anatomy:
  * 1. The Issue
  * 2. Why it matters
  * 3. Who owns the next step
  * 4. How to resolve it
  */
 export function formatPlainAlert(alert: any): PlainAlertAnatomy {
-  const institutionName = alert.application?.institution?.name || 'Institution';
-  const appNumber = alert.application?.applicationNumber || '';
+  const institutionName = alert?.application?.institution?.name || 'Institution';
+  const appNumber = alert?.application?.applicationNumber || '';
 
   // 1. THE ISSUE
-  let issue = alert.message || alert.title;
-  if (alert.obligation) {
+  let issue = alert?.message || alert?.title || 'Regulatory action required';
+  if (alert?.obligation) {
     issue = `Mandatory compliance undertaking "${alert.obligation.title}" is deficient or missing evidence for ${institutionName}.`;
-  } else if (alert.alertType === 'OVERDUE_STAGE') {
+  } else if (alert?.alertType === 'OVERDUE_STAGE') {
     issue = `Application ${appNumber} (${institutionName}) has exceeded the statutory timeframe in stage "${formatPlainStage(alert.application?.currentStage)}".`;
-  } else if (alert.alertType === 'EVC_DEADLINE') {
-    issue = `Expert Visiting Committee (EVC) has not been scheduled within the statutory timeframe for ${institutionName}.`;
+  } else if (alert?.alertType === 'EVC_DEADLINE') {
+    issue = `Inspection panel has not been scheduled within the statutory timeframe for ${institutionName}.`;
   }
 
   // 2. WHY IT MATTERS
   let whyItMatters =
-    'Statutory prerequisite under AICTE Approval Process Handbook (APH 2025). Halts application processing and may trigger audit penalties or approval withdrawal.';
-  if (alert.severity === 'CRITICAL') {
+    'Statutory requirement under the Approval Process Handbook. Delays application processing and risks compliance penalties.';
+  if (alert?.severity === 'CRITICAL') {
     whyItMatters =
-      'Critical regulatory violation under APH Chapter II. Prevents mandatory approval determination and risks automatic rejection upon cutoff date.';
-  } else if (alert.alertType === 'OVERDUE_STAGE') {
+      'Critical regulatory requirement. Prevents approval determination and risks automatic rejection upon deadline cutoff.';
+  } else if (alert?.alertType === 'OVERDUE_STAGE') {
     whyItMatters =
-      'Stage SLA breach. Delays regional EVC dispatch and causes cascade delays across the national academic calendar.';
-  } else if (alert.alertType === 'EXPIRING_DOCUMENT') {
+      'Stage timeline breach. Delays regional inspection and causes cascade delays across the academic calendar.';
+  } else if (alert?.alertType === 'EXPIRING_DOCUMENT') {
     whyItMatters =
       'Statutory compliance requirement. Expired safety certificates or land leases void legal institutional recognition.';
   }
 
   // 3. WHO OWNS THE NEXT STEP
-  let owner = 'Assigned Regulatory Officer';
-  if (alert.recipientRole === 'INSTITUTION_USER') {
-    owner = `Institution Principal & Head of Department (${institutionName})`;
-  } else if (alert.recipientRole === 'REGIONAL_OFFICER') {
-    owner = 'Regional Scrutiny Officer (Zonal Directorate)';
-  } else if (alert.recipientRole === 'BUREAU_OFFICER') {
-    owner = 'Bureau Officer (AICTE Headquarters)';
-  } else if (alert.recipientRole === 'COMMITTEE_REVIEWER') {
-    owner = 'Expert Visiting Committee Review Panel';
-  } else if (alert.recipientRole === 'SYSTEM_ADMIN') {
-    owner = 'PRISM System Administrator';
+  let owner = 'Assigned regulatory officer';
+  if (alert?.recipientRole === 'INSTITUTION_USER') {
+    owner = `Institution leadership (${institutionName})`;
+  } else if (alert?.recipientRole === 'REGIONAL_OFFICER') {
+    owner = 'Regional review officer';
+  } else if (alert?.recipientRole === 'BUREAU_OFFICER') {
+    owner = 'Bureau officer (Headquarters)';
+  } else if (alert?.recipientRole === 'COMMITTEE_REVIEWER') {
+    owner = 'Inspection committee review panel';
+  } else if (alert?.recipientRole === 'SYSTEM_ADMIN') {
+    owner = 'System administrator';
   }
 
   // 4. HOW TO RESOLVE IT
   let howToResolve = 'Acknowledge the alert, inspect the relevant case dossier, and record verified resolution notes.';
   let actionUrl = '/alerts';
-  let actionLabel = 'Acknowledge & Resolve';
+  let actionLabel = 'Review alert';
 
-  if (alert.obligation) {
-    howToResolve = 'Upload the missing signed evidence or renewed municipal NOC in the compliance vault.';
+  if (alert?.obligation) {
+    howToResolve = 'Upload the missing signed evidence or renewed municipal certificate in the compliance vault.';
     actionUrl = '/compliance';
-    actionLabel = 'Upload Evidence';
-  } else if (alert.applicationId) {
-    howToResolve = 'Open the case dossier to record formal scrutiny observations or validate resubmissions.';
+    actionLabel = 'Upload document';
+  } else if (alert?.applicationId) {
+    howToResolve = 'Open the case dossier to record formal review observations or validate resubmissions.';
     actionUrl = `/applications/${alert.applicationId}`;
-    actionLabel = 'Open Case Dossier';
-  } else if (alert.alertType === 'EVC_DEADLINE') {
-    howToResolve = 'Appoint a 3-member expert inspection panel and confirm the on-site visit date.';
+    actionLabel = 'View application';
+  } else if (alert?.alertType === 'EVC_DEADLINE') {
+    howToResolve = 'Appoint a 3-member expert inspection panel and confirm the visit date.';
     actionUrl = '/evc';
-    actionLabel = 'Schedule EVC Visit';
+    actionLabel = 'Schedule inspection';
   }
 
-  let urgencyText = 'Action Needed';
-  if (alert.severity === 'CRITICAL') {
-    urgencyText = 'Critical Blocker — Immediate Action';
-  } else if (alert.severity === 'HIGH') {
-    urgencyText = 'Urgent — Action Required';
+  let urgencyText = 'Action needed';
+  if (alert?.severity === 'CRITICAL') {
+    urgencyText = 'Critical blocker — immediate action';
+  } else if (alert?.severity === 'HIGH') {
+    urgencyText = 'Urgent — action required';
   }
 
   return {
@@ -268,4 +401,43 @@ export function formatPlainAlert(alert: any): PlainAlertAnatomy {
     actionUrl,
     actionLabel,
   };
+}
+
+/**
+ * Sanitizes technical error messages to prevent exposing database keys,
+ * Prisma stack traces, or raw internal errors to users.
+ */
+export function safeFormatError(err: any, fallbackMessage = "We couldn't save your changes. Try again."): string {
+  if (!err) return fallbackMessage;
+  const raw = typeof err === 'string' ? err : err.message || '';
+  if (!raw) return fallbackMessage;
+
+  // Filter out internal database, Prisma, or code stack traces
+  const technicalSignatures = [
+    'prisma',
+    'findunique',
+    'findfirst',
+    'sqlite',
+    'table',
+    'syntaxerror',
+    'typeerror',
+    'cannot read properties',
+    'database',
+    'column',
+    'constraint',
+    'foreign key',
+  ];
+
+  const lower = raw.toLowerCase();
+  const hasTechSignatures = technicalSignatures.some((sig) => lower.includes(sig));
+
+  if (hasTechSignatures) {
+    if (lower.includes('user') || lower.includes('credential') || lower.includes('auth')) {
+      return 'Invalid email address or password. Try again.';
+    }
+    return fallbackMessage;
+  }
+
+  // Otherwise convert underscores to spaces and format nicely
+  return toSentenceCase(raw);
 }

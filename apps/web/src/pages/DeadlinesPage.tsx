@@ -3,18 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   Clock,
-  AlertTriangle,
-  Calendar,
-  FileText,
-  ShieldAlert,
   ArrowRight,
-  Filter,
   CheckCircle2,
-  CalendarCheck,
   Building,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
-import { formatDaysRemaining, formatPlainStage } from '../lib/plainLanguage.js';
+import { formatDaysRemaining, formatPlainStage, formatCategory } from '../lib/plainLanguage.js';
 
 export function DeadlinesPage() {
   const [filter, setFilter] = useState<'ALL' | 'CRITICAL_7_DAYS' | 'EXPIRING_30_DAYS' | 'OVERDUE'>('ALL');
@@ -41,7 +35,7 @@ export function DeadlinesPage() {
     return (
       <div className="p-12 text-center text-slate-muted font-mono text-xs">
         <span className="w-2.5 h-2.5 rounded-full bg-platinum animate-ping inline-block mr-2" />
-        Calculating Statutory AICTE Deadlines &amp; Expirations...
+        Calculating deadlines and expirations...
       </div>
     );
   }
@@ -74,9 +68,9 @@ export function DeadlinesPage() {
         institution: doc.institution?.name || 'Institution',
         targetDate: doc.expiryDate,
         daysRemaining: diff,
-        category: (doc.category || 'General').replace(/_/g, ' '),
+        category: formatCategory(doc.category),
         actionUrl: '/documents',
-        actionLabel: 'Inspect & Renew',
+        actionLabel: 'Upload document',
       });
     }
   });
@@ -88,13 +82,13 @@ export function DeadlinesPage() {
       allDeadlines.push({
         id: `evc-${evc.id}`,
         type: 'EVC_CUTOFF',
-        title: `Constitute EVC Expert Inspection Committee`,
+        title: `Appoint expert inspection committee`,
         institution: evc.application?.institution?.name || 'Institution',
         targetDate: evc.schedulingDeadline,
         daysRemaining: diff,
-        category: 'EVC Visit Window',
+        category: 'Inspection window',
         actionUrl: '/evc',
-        actionLabel: 'Form Committee',
+        actionLabel: 'Schedule inspection',
       });
     }
   });
@@ -106,13 +100,13 @@ export function DeadlinesPage() {
       allDeadlines.push({
         id: `app-${app.id}`,
         type: 'STAGE_DETERMINATION',
-        title: `${(app.currentStage || 'Application').replace(/_/g, ' ')} Statutory Cutoff`,
+        title: `${formatPlainStage(app.currentStage)} deadline`,
         institution: app.institution?.name || 'Institution',
         targetDate: app.deadlineDate,
         daysRemaining: diff,
-        category: `App #${app.applicationNumber}`,
+        category: `Dossier #${app.applicationNumber}`,
         actionUrl: `/applications/${app.id}`,
-        actionLabel: 'Prioritize Determination',
+        actionLabel: 'View application',
       });
     }
   });
@@ -138,13 +132,13 @@ export function DeadlinesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-graphite-border pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-silver-bright tracking-tight">Compliance Deadlines</h1>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-status-warning/15 text-status-warning border border-status-warning/30">
-              TIME-SENSITIVE RADAR
+            <h1 className="text-xl font-bold text-silver-bright tracking-tight">Deadlines</h1>
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-status-warning/15 text-status-warning border border-status-warning/30">
+              Time-sensitive radar
             </span>
           </div>
           <p className="text-xs text-slate-muted mt-0.5">
-            Monitor approaching statutory expirations, expert inspection windows, and regulatory cutoffs
+            Monitor approaching statutory expirations, inspection windows, and regulatory cutoffs
           </p>
         </div>
 
@@ -152,9 +146,9 @@ export function DeadlinesPage() {
         <div className="flex items-center gap-1.5 bg-graphite p-1 rounded-xl border border-graphite-border self-start sm:self-auto">
           <button
             onClick={() => setFilter('ALL')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               filter === 'ALL'
-                ? 'bg-platinum text-obsidian font-bold shadow-platinum'
+                ? 'bg-platinum text-obsidian font-semibold'
                 : 'text-slate-muted hover:text-silver'
             }`}
           >
@@ -162,29 +156,29 @@ export function DeadlinesPage() {
           </button>
           <button
             onClick={() => setFilter('CRITICAL_7_DAYS')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               filter === 'CRITICAL_7_DAYS'
-                ? 'bg-status-warning text-obsidian font-bold shadow-platinum'
+                ? 'bg-status-warning text-obsidian font-semibold'
                 : 'text-slate-muted hover:text-status-warning'
             }`}
           >
-            &lt; 7 Days ({criticalCount})
+            &lt; 7 days ({criticalCount})
           </button>
           <button
             onClick={() => setFilter('EXPIRING_30_DAYS')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               filter === 'EXPIRING_30_DAYS'
-                ? 'bg-platinum text-obsidian font-bold shadow-platinum'
+                ? 'bg-platinum text-obsidian font-semibold'
                 : 'text-slate-muted hover:text-silver'
             }`}
           >
-            &lt; 30 Days ({upcomingCount})
+            &lt; 30 days ({upcomingCount})
           </button>
           <button
             onClick={() => setFilter('OVERDUE')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               filter === 'OVERDUE'
-                ? 'bg-status-critical text-white font-bold shadow-platinum'
+                ? 'bg-status-critical text-white font-semibold'
                 : 'text-slate-muted hover:text-status-critical'
             }`}
           >
@@ -196,19 +190,19 @@ export function DeadlinesPage() {
       {/* Summary KPI Badges */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="platinum-card p-3 rounded-xl border border-graphite-border">
-          <span className="text-[10px] font-mono uppercase text-slate-muted block">Total Tracked Deadlines</span>
+          <span className="text-[10px] uppercase text-slate-muted block">Total deadlines</span>
           <span className="text-xl font-bold font-mono text-silver-bright tabular-nums">{allDeadlines.length}</span>
         </div>
         <div className="platinum-card p-3 rounded-xl border border-status-critical/30 bg-status-critical/5">
-          <span className="text-[10px] font-mono uppercase text-status-critical block font-bold">Past Due / Overdue</span>
+          <span className="text-[10px] uppercase text-status-critical block font-semibold">Overdue</span>
           <span className="text-xl font-bold font-mono text-status-critical tabular-nums">{overdueCount}</span>
         </div>
         <div className="platinum-card p-3 rounded-xl border border-status-warning/30 bg-status-warning/5">
-          <span className="text-[10px] font-mono uppercase text-status-warning block font-bold">Critical (&lt; 7 Days)</span>
+          <span className="text-[10px] uppercase text-status-warning block font-semibold">Due in &lt; 7 days</span>
           <span className="text-xl font-bold font-mono text-status-warning tabular-nums">{criticalCount}</span>
         </div>
-        <div className="platinum-card p-3 rounded-xl border border-platinum/30 bg-gunmetal/30">
-          <span className="text-[10px] font-mono uppercase text-platinum block font-bold">Upcoming (&lt; 30 Days)</span>
+        <div className="platinum-card p-3 rounded-xl border border-graphite-border bg-graphite/40">
+          <span className="text-[10px] uppercase text-platinum block font-semibold">Upcoming in &lt; 30 days</span>
           <span className="text-xl font-bold font-mono text-silver-bright tabular-nums">{upcomingCount}</span>
         </div>
       </div>
@@ -218,7 +212,7 @@ export function DeadlinesPage() {
         {filtered.length === 0 ? (
           <div className="platinum-card p-12 text-center rounded-2xl border border-graphite-border space-y-2">
             <CheckCircle2 size={28} className="mx-auto text-status-success" />
-            <p className="text-sm font-semibold text-silver">No Deadlines in Selected Filter</p>
+            <p className="text-sm font-semibold text-silver">No deadlines found in this category</p>
             <p className="text-xs text-slate-muted">All regulatory deadlines in this bracket have been addressed.</p>
           </div>
         ) : (
@@ -234,13 +228,13 @@ export function DeadlinesPage() {
               if (item.type === 'EVC_CUTOFF') {
                 return 'Next action: Appoint 3-member expert inspection panel and issue visit schedule';
               }
-              return 'Next action: Prioritize dossier determination before statutory stage cutoff';
+              return 'Next action: Complete application review before deadline cutoff';
             })();
 
             return (
               <div
                 key={item.id}
-                className={`platinum-card platinum-card-hover p-4 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
+                className={`platinum-card p-4 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${
                   isOverdue
                     ? 'border-status-critical/40 bg-status-critical/5'
                     : isAtRisk
@@ -251,7 +245,7 @@ export function DeadlinesPage() {
                 <div className="space-y-1.5 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
+                      className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
                         isOverdue
                           ? 'bg-status-critical/20 text-status-critical border-status-critical/40'
                           : isAtRisk
@@ -262,7 +256,7 @@ export function DeadlinesPage() {
                       {timing.text}
                     </span>
 
-                    <span className="text-[11px] font-mono text-slate-muted">
+                    <span className="text-[11px] text-slate-muted">
                       {item.category}
                     </span>
                   </div>
@@ -273,12 +267,12 @@ export function DeadlinesPage() {
                       <Building size={12} className="text-platinum" />
                       <span>{item.institution}</span>
                       <span>•</span>
-                      <span>Target Date: {new Date(item.targetDate).toLocaleDateString()}</span>
+                      <span>Target date: {new Date(item.targetDate).toLocaleDateString()}</span>
                     </p>
                   </div>
 
                   {/* Plain Language Next Action */}
-                  <div className="p-2 rounded bg-obsidian border border-graphite-border/70 text-[11px] font-mono text-platinum">
+                  <div className="p-2 rounded bg-obsidian border border-graphite-border text-[11px] text-platinum">
                     {nextActionText}
                   </div>
                 </div>
@@ -286,7 +280,7 @@ export function DeadlinesPage() {
                 <div className="flex items-center gap-3 self-end md:self-center">
                   <Link
                     to={item.actionUrl}
-                    className="platinum-button-primary px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap"
+                    className="platinum-button-primary px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
                   >
                     <span>{item.actionLabel}</span>
                     <ArrowRight size={13} />
