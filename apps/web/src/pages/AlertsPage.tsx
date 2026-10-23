@@ -14,9 +14,13 @@ import {
   Clock,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
-import { formatPlainAlert, formatRole } from '../lib/plainLanguage.js';
+import { formatPlainAlert, formatRole, safeFormatError } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { LoadingState } from '../components/common/LoadingState.js';
+import { EmptyState } from '../components/common/EmptyState.js';
 
 export function AlertsPage() {
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState('UNRESOLVED');
@@ -44,7 +48,18 @@ export function AlertsPage() {
       }),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['alerts-feed'] });
-      alert(data.message || 'Deadline check completed.');
+      showToast({
+        type: 'success',
+        title: 'Deadline check completed',
+        message: data.message || 'All statutory deadlines and escalation tiers were verified.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't check deadlines",
+        message: safeFormatError(err, 'Try again in a few moments.'),
+      });
     },
   });
 
@@ -58,6 +73,18 @@ export function AlertsPage() {
       queryClient.invalidateQueries({ queryKey: ['alerts-feed'] });
       setResolveModalOpen(false);
       setResolutionNotes('');
+      showToast({
+        type: 'success',
+        title: 'Alert acknowledged and resolved',
+        message: 'Your compliance review notes have been recorded in the audit trail.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't acknowledge the alert",
+        message: safeFormatError(err, 'Try again in a few moments.'),
+      });
     },
   });
 
@@ -130,12 +157,13 @@ export function AlertsPage() {
       {/* Alerts Feed */}
       <div className="space-y-3">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-muted font-mono text-xs">Loading alerts...</div>
+          <LoadingState message="Loading system alerts..." subtext="Checking active statutory triggers and escalation tiers..." rows={3} />
         ) : (alerts || []).length === 0 ? (
-          <div className="platinum-card p-12 text-center text-slate-muted rounded-xl border border-graphite-border">
-            <CheckCircle size={32} className="mx-auto mb-2 text-status-success" />
-            <p className="text-sm font-medium text-silver">No unresolved alerts in this category</p>
-          </div>
+          <EmptyState
+            icon={CheckCircle}
+            title="No unresolved alerts"
+            description="All regulatory compliance notifications and deadline triggers are currently clear."
+          />
         ) : (
           alerts!.map((alt: any) => {
             const anatomy = formatPlainAlert(alt);

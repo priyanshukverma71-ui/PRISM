@@ -5,9 +5,13 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
-import { formatStatus } from '../lib/plainLanguage.js';
+import { formatStatus, safeFormatError } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { LoadingState } from '../components/common/LoadingState.js';
+import { EmptyState } from '../components/common/EmptyState.js';
 
 export function RuleCompilerPage() {
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
 
   const [inputText, setInputText] = useState(
@@ -28,7 +32,18 @@ export function RuleCompilerPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rule-drafts'] });
-      alert('Draft rule compiled successfully. Pending administrative approval.');
+      showToast({
+        type: 'success',
+        title: 'Draft rule compiled',
+        message: 'Draft rule compiled successfully. Pending administrative approval.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't compile the draft rule",
+        message: safeFormatError(err, 'Check that the input text contains a valid statutory clause.'),
+      });
     },
   });
 
@@ -40,6 +55,18 @@ export function RuleCompilerPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rule-drafts'] });
+      showToast({
+        type: 'success',
+        title: 'Rule review submitted',
+        message: 'Rule status and review observations have been recorded.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't record the rule review",
+        message: safeFormatError(err, 'Try again in a few moments.'),
+      });
     },
   });
 

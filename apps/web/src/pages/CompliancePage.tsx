@@ -14,10 +14,15 @@ import {
   formatCategory,
   formatSeverity,
   formatStatus,
+  safeFormatError,
 } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { LoadingState } from '../components/common/LoadingState.js';
+import { EmptyState } from '../components/common/EmptyState.js';
 
 export function CompliancePage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState('');
@@ -54,6 +59,18 @@ export function CompliancePage() {
       queryClient.invalidateQueries({ queryKey: ['compliance-obligations'] });
       setSubmitModalOpen(false);
       setFileName('');
+      showToast({
+        type: 'success',
+        title: 'Evidence submitted',
+        message: 'Documentary proof was uploaded for statutory review.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't submit evidence",
+        message: safeFormatError(err, 'Check file parameters and try again.'),
+      });
     },
   });
 
@@ -67,6 +84,18 @@ export function CompliancePage() {
       queryClient.invalidateQueries({ queryKey: ['compliance-obligations'] });
       setVerifyModalOpen(false);
       setVerifyComments('');
+      showToast({
+        type: 'success',
+        title: 'Verification determination recorded',
+        message: 'Compliance requirement status and observations have been saved.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't record verification",
+        message: safeFormatError(err, 'Try again in a few moments.'),
+      });
     },
   });
 
@@ -135,12 +164,13 @@ export function CompliancePage() {
       {/* Obligations Grid */}
       <div className="grid grid-cols-1 gap-4">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-muted font-mono text-xs">Loading compliance registers...</div>
+          <LoadingState message="Loading compliance registers..." subtext="Checking statutory proof of affiliation, building stability, and safety..." rows={4} />
         ) : (obligations || []).length === 0 ? (
-          <div className="platinum-card p-12 text-center text-slate-muted rounded-xl border border-graphite-border">
-            <ShieldCheck size={32} className="mx-auto mb-2 text-gunmetal-light" />
-            <p className="text-sm font-medium text-silver">No requirements found. Try changing your filters.</p>
-          </div>
+          <EmptyState
+            icon={ShieldCheck}
+            title="No requirements found"
+            description="There are currently no compliance obligations matching your selected status and category filters."
+          />
         ) : (
           obligations!.map((ob: any) => {
             const latestSub = ob.submissions && ob.submissions.length > 0 ? ob.submissions[0] : null;

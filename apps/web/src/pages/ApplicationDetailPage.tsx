@@ -29,11 +29,16 @@ import {
   formatSeverity,
   formatRole,
   formatActionType,
+  safeFormatError,
 } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { LoadingState } from '../components/common/LoadingState.js';
+import { ErrorBanner } from '../components/common/ErrorBanner.js';
 
 export function ApplicationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'evc' | 'compliance' | 'documents'>('overview');
@@ -63,10 +68,22 @@ export function ApplicationDetailPage() {
         method: 'POST',
         body: JSON.stringify(body),
       }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['application', id] });
       setTransitionModalOpen(false);
       setTransitionComments('');
+      showToast({
+        type: 'success',
+        title: 'Stage determination recorded',
+        message: 'The application processing stage has been updated successfully.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't advance the stage",
+        message: safeFormatError(err, 'Check that statutory prerequisite documents are verified first.'),
+      });
     },
   });
 
@@ -80,6 +97,18 @@ export function ApplicationDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['application', id] });
       setReturnModalOpen(false);
       setReturnReason('');
+      showToast({
+        type: 'warning',
+        title: 'Application returned for clarification',
+        message: 'Formal observations have been dispatched to the institution applicant.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't return the application",
+        message: safeFormatError(err, 'A clear reason is required to return a dossier.'),
+      });
     },
   });
 
@@ -93,20 +122,44 @@ export function ApplicationDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['application', id] });
       setEvidenceModalOpen(false);
       setUploadFileName('');
+      showToast({
+        type: 'success',
+        title: 'Evidence submitted',
+        message: 'Documentary proof was uploaded for statutory review.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't submit evidence",
+        message: safeFormatError(err, 'Please select a valid document and try again.'),
+      });
     },
   });
 
   if (isLoading) {
-    return <div className="p-12 text-center text-slate-muted font-mono text-xs">Loading case dossier...</div>;
+    return (
+      <LoadingState
+        message="Loading case dossier..."
+        subtext="Retrieving statutory routing, compliance undertakings, and audit history..."
+        rows={5}
+      />
+    );
   }
 
   if (error || !app) {
     return (
-      <div className="p-8 text-center text-status-critical bg-graphite border border-status-critical/30 rounded-xl space-y-3">
-        <AlertTriangle size={32} className="mx-auto" />
-        <p className="text-sm">We couldn't load this application dossier. Please try again.</p>
-        <Link to="/applications" className="inline-block text-xs text-platinum underline">
-          Return to applications
+      <div className="space-y-4">
+        <ErrorBanner
+          title="We couldn't load this application dossier"
+          message="The record could not be retrieved from the database. Try refreshing or check your network permissions."
+        />
+        <Link
+          to="/applications"
+          className="platinum-button-secondary px-3.5 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5"
+        >
+          <ChevronLeft size={14} />
+          <span>Return to applications</span>
         </Link>
       </div>
     );

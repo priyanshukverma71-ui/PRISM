@@ -7,10 +7,14 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
-import { formatCategory, formatStatus } from '../lib/plainLanguage.js';
+import { formatCategory, formatStatus, safeFormatError } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { LoadingState } from '../components/common/LoadingState.js';
+import { EmptyState } from '../components/common/EmptyState.js';
 
 export function DocumentsPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
 
   const [expiryFilter, setExpiryFilter] = useState('');
@@ -46,6 +50,18 @@ export function DocumentsPage() {
       setUploadModalOpen(false);
       setDocTitle('');
       setDocFileName('');
+      showToast({
+        type: 'success',
+        title: 'Document registered',
+        message: 'The statutory document record has been added to the secure vault.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't register the document",
+        message: safeFormatError(err, 'Check that the document parameters are valid and try again.'),
+      });
     },
   });
 
@@ -117,12 +133,15 @@ export function DocumentsPage() {
       {/* Document Records Table */}
       <div className="platinum-card rounded-xl border border-graphite-border overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-muted font-mono text-xs">Loading vault records...</div>
+          <LoadingState message="Loading documents vault..." subtext="Validating SHA-256 cryptographic hashes and statutory expiry dates..." rows={4} />
         ) : (documents || []).length === 0 ? (
-          <div className="p-12 text-center text-slate-muted">
-            <FileText size={32} className="mx-auto mb-2 text-gunmetal-light" />
-            <p className="text-sm font-medium text-silver">No documents found. Try changing your filters.</p>
-          </div>
+          <EmptyState
+            icon={FileText}
+            title="No documents found"
+            description="No statutory records match your current search and category filters."
+            actionLabel="Upload document"
+            onAction={() => setUploadModalOpen(true)}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">

@@ -15,6 +15,8 @@ import {
   formatCategory,
   getApplicationOwner,
 } from '../lib/plainLanguage.js';
+import { LoadingState } from '../components/common/LoadingState.js';
+import { EmptyState } from '../components/common/EmptyState.js';
 
 export function ApplicationsPage() {
   const navigate = useNavigate();
@@ -182,13 +184,16 @@ export function ApplicationsPage() {
       {/* Applications Data Table */}
       <div className="platinum-card rounded-xl border border-graphite-border overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-muted font-mono text-xs">Loading applications...</div>
+          <LoadingState message="Loading applications..." subtext="Retrieving regulatory case dossiers and stage routing..." rows={5} />
         ) : !data || data.length === 0 ? (
-          <div className="p-12 text-center text-slate-muted">
-            <Layers size={32} className="mx-auto mb-2 text-gunmetal-light" />
-            <p className="text-sm font-medium text-silver">No applications found. Try changing your filters.</p>
-            <p className="text-xs text-slate-muted mt-1">Try resetting your search criteria or submit a new application.</p>
-          </div>
+          <EmptyState
+            title="No applications found"
+            description="No dossiers match your active region, stage, or category filters."
+            actionLabel="New application"
+            onAction={() => navigate('/applications/new')}
+            secondaryActionLabel="Clear filters"
+            onSecondaryAction={() => setSearchParams(new URLSearchParams())}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">

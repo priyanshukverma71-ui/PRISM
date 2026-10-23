@@ -25,10 +25,15 @@ import {
   formatRole,
   formatStatus,
   formatCategory,
+  safeFormatError,
 } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { LoadingState } from '../components/common/LoadingState.js';
+import { EmptyState } from '../components/common/EmptyState.js';
 
 export function SettingsPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'SYSTEM' | 'RULES' | 'AUDIT'>('SYSTEM');
 
@@ -63,7 +68,18 @@ export function SettingsPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rule-drafts'] });
-      alert('Draft rule compiled successfully. Pending administrative approval.');
+      showToast({
+        type: 'success',
+        title: 'Draft rule compiled',
+        message: 'Draft rule compiled successfully. Pending administrative approval.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: "We couldn't compile the draft rule",
+        message: safeFormatError(err, 'Check that the clause text is valid.'),
+      });
     },
   });
 
@@ -88,6 +104,18 @@ export function SettingsPage() {
     mutationFn: () => apiRequest<any>('/audit/verify'),
     onSuccess: (data) => {
       setVerifyStatus(data);
+      showToast({
+        type: 'success',
+        title: 'Cryptographic ledger verified',
+        message: 'SHA-256 hash chains across all recorded sequence blocks are valid.',
+      });
+    },
+    onError: (err: any) => {
+      showToast({
+        type: 'error',
+        title: 'Verification error',
+        message: safeFormatError(err, 'Failed to verify ledger integrity.'),
+      });
     },
   });
 
@@ -103,8 +131,17 @@ export function SettingsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      showToast({
+        type: 'success',
+        title: 'Audit log exported',
+        message: 'The audit record CSV was downloaded successfully.',
+      });
     } catch (e: any) {
-      alert(`Export failed: ${e.message}`);
+      showToast({
+        type: 'error',
+        title: "We couldn't export the audit log",
+        message: safeFormatError(e, 'Try again in a few moments.'),
+      });
     }
   };
 

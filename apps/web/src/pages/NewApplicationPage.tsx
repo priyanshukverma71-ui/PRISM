@@ -5,9 +5,12 @@ import { ChevronLeft, ArrowRight, Building, BookOpen, Sliders } from 'lucide-rea
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
 import { safeFormatError } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { ErrorBanner } from '../components/common/ErrorBanner.js';
 
 export function NewApplicationPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [category, setCategory] = useState<'EXTENSION_OF_APPROVAL' | 'NEW_INSTITUTION' | 'INTAKE_INCREASE' | 'NEW_COURSE'>('EXTENSION_OF_APPROVAL');
@@ -39,10 +42,21 @@ export function NewApplicationPage() {
         body: JSON.stringify(body),
       }),
     onSuccess: (data: any) => {
+      showToast({
+        type: 'success',
+        title: 'Application registered',
+        message: `Dossier ${data.applicationNumber || ''} created and submitted into review queue.`,
+      });
       navigate(`/applications/${data.id}`);
     },
     onError: (err: any) => {
-      setErrorMessage(safeFormatError(err, "We couldn't submit your application. Please verify the details and try again."));
+      const msg = safeFormatError(err, "We couldn't submit your application. Please verify the details and try again.");
+      setErrorMessage(msg);
+      showToast({
+        type: 'error',
+        title: 'Submission failed',
+        message: msg,
+      });
     },
   });
 
@@ -88,8 +102,11 @@ export function NewApplicationPage() {
 
       <div className="platinum-card p-6 rounded-2xl border border-graphite-border">
         {errorMessage && (
-          <div className="mb-5 p-3 rounded-lg bg-status-critical/10 border border-status-critical/30 text-status-critical text-xs">
-            {errorMessage}
+          <div className="mb-5">
+            <ErrorBanner
+              title="Application validation error"
+              message={errorMessage}
+            />
           </div>
         )}
 

@@ -16,9 +16,12 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { formatPlainStage } from '../lib/plainLanguage.js';
+import { formatPlainStage, safeFormatError } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { LoadingState } from '../components/common/LoadingState.js';
 
 export function ReportsPage() {
+  const { showToast } = useToast();
   const { data: analytics, isLoading } = useQuery({
     queryKey: ['reports-analytics'],
     queryFn: () => apiRequest<any>('/reports/analytics'),
@@ -36,15 +39,24 @@ export function ReportsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      showToast({
+        type: 'success',
+        title: 'Report exported',
+        message: 'The executive regulatory summary CSV was generated and downloaded.',
+      });
     } catch (e: any) {
-      alert(`Export failed: ${e.message}`);
+      showToast({
+        type: 'error',
+        title: "We couldn't export the executive report",
+        message: safeFormatError(e, 'Try again in a few moments.'),
+      });
     }
   };
 
   const COLORS = ['#DEE1E5', '#C7CBD0', '#9EA4AC', '#47D7A0', '#F4B860', '#FF626B'];
 
   if (isLoading) {
-    return <div className="p-12 text-center text-slate-muted font-mono text-xs">Computing regulatory analytics...</div>;
+    return <LoadingState message="Computing executive regulatory analytics..." subtext="Aggregating regional pendency rates and SLA compliance metrics..." rows={4} />;
   }
 
   const stageData = (analytics?.stagePendency || []).map((s: any) => ({

@@ -12,9 +12,14 @@ import {
   formatActionType,
   formatEntityType,
   formatRole,
+  safeFormatError,
 } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { LoadingState } from '../components/common/LoadingState.js';
+import { EmptyState } from '../components/common/EmptyState.js';
 
 export function AuditPage() {
+  const { showToast } = useToast();
   const [actionFilter, setActionFilter] = useState('');
   const [targetFilter, setTargetFilter] = useState('');
   const [verifyStatus, setVerifyStatus] = useState<any>(null);
@@ -49,8 +54,17 @@ export function AuditPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      showToast({
+        type: 'success',
+        title: 'Activity log exported',
+        message: 'The audit record CSV was generated and downloaded successfully.',
+      });
     } catch (e: any) {
-      alert(`Export failed: ${e.message}`);
+      showToast({
+        type: 'error',
+        title: "We couldn't export the activity log",
+        message: safeFormatError(e, 'Try again in a few moments.'),
+      });
     }
   };
 
@@ -154,11 +168,13 @@ export function AuditPage() {
       {/* Audit Log Chronological Feed */}
       <div className="space-y-3">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-muted font-mono text-xs">Reading activity ledger...</div>
+          <LoadingState message="Reading activity ledger..." subtext="Verifying cryptographic sequence and action entries..." rows={4} />
         ) : events.length === 0 ? (
-          <div className="platinum-card p-12 text-center text-slate-muted rounded-xl border border-graphite-border">
-            <p className="text-sm font-medium text-silver">No activity records match the current filter</p>
-          </div>
+          <EmptyState
+            icon={History}
+            title="No activity records found"
+            description="No cryptographic ledger events match your current action and target filters."
+          />
         ) : (
           events.map((e: any) => (
             <div key={e.id} className="platinum-card p-4 rounded-xl border border-graphite-border space-y-2">

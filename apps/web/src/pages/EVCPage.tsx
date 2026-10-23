@@ -9,10 +9,14 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
-import { formatStatus, formatCategory } from '../lib/plainLanguage.js';
+import { useToast } from '../context/ToastContext.js';
+import { formatStatus, formatCategory, safeFormatError } from '../lib/plainLanguage.js';
+import { LoadingState } from '../components/common/LoadingState.js';
+import { EmptyState } from '../components/common/EmptyState.js';
 
 export function EVCPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState('');
@@ -46,9 +50,18 @@ export function EVCPage() {
       queryClient.invalidateQueries({ queryKey: ['evc-visits'] });
       setScheduleModalOpen(false);
       setFindingsModalOpen(false);
+      showToast({
+        type: 'success',
+        title: 'Inspection updated',
+        message: 'The committee schedule and inspection status have been saved.',
+      });
     },
     onError: (err: any) => {
-      alert(`Scheduling blocked: ${err.message}`);
+      showToast({
+        type: 'error',
+        title: "We couldn't save the inspection schedule",
+        message: safeFormatError(err, 'Check that the committee members and date comply with handbook rules.'),
+      });
     },
   });
 
@@ -73,7 +86,11 @@ export function EVCPage() {
 
     const isReschedule = selectedEvc.status === 'SCHEDULED';
     if (isReschedule && !reschedulingReason) {
-      alert('A reason is required when rescheduling an inspection.');
+      showToast({
+        type: 'warning',
+        title: 'Reason required',
+        message: 'A formal reason is required when rescheduling an inspection committee.',
+      });
       return;
     }
 
@@ -150,12 +167,13 @@ export function EVCPage() {
       {/* EVC Visits Cards & Table */}
       <div className="grid grid-cols-1 gap-4">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-muted font-mono text-xs">Loading inspection registers...</div>
+          <LoadingState message="Loading inspection registers..." subtext="Retrieving committee schedules and campus review rosters..." rows={3} />
         ) : (evcVisits || []).length === 0 ? (
-          <div className="platinum-card p-12 text-center text-slate-muted rounded-xl border border-graphite-border">
-            <Calendar size={32} className="mx-auto mb-2 text-gunmetal-light" />
-            <p className="text-sm font-medium text-silver">No inspection visits found. Try changing your filters.</p>
-          </div>
+          <EmptyState
+            icon={Calendar}
+            title="No inspection visits found"
+            description="There are currently no inspection committee visits matching your active filter criteria."
+          />
         ) : (
           evcVisits!.map((evc: any) => (
             <div
