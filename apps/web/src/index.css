@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #08090B;
+    color: #E1E4E8;
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Tabular figures for aerospace & financial precision */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Custom Platinum & Obsidian Utility Classes */
+.bg-obsidian-gradient {
+  background: radial-gradient(circle at 50% 0%, #171A21 0%, #08090B 75%);
+}
+
+.platinum-card {
+  background: #111316;
+  border: 1px solid #202328;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.7);
+}
+
+.platinum-card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.platinum-card-hover:hover {
+  border-color: #434852;
+  box-shadow: 0 0 20px -5px rgba(199, 203, 208, 0.12);
+  transform: translateY(-1px);
+}
+
+.platinum-button-primary {
+  background: linear-gradient(180deg, #E1E4E8 0%, #C7CBD0 100%);
+  color: #08090B;
+  font-weight: 600;
+  border: 1px solid #FFFFFF;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: all 0.15s ease;
+}
+.platinum-button-primary:hover {
+  background: linear-gradient(180deg, #FFFFFF 0%, #DEE1E5 100%);
+  box-shadow: 0 0 15px rgba(199, 203, 208, 0.3);
+}
+
+.platinum-button-secondary {
+  background: #1B1E24;
+  color: #C7CBD0;
+  border: 1px solid #2A2E35;
+  transition: all 0.15s ease;
+}
+.platinum-button-secondary:hover {
+  background: #252A33;
+  color: #FFFFFF;
+  border-color: #434852;
+}
+
+/* Custom Scrollbar for Enterprise Control Room */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #08090B;
+}
+::-webkit-scrollbar-thumb {
+  background: #202328;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #353A42;
+}

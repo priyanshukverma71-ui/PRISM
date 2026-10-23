@@ -1,0 +1,42 @@
+name: PRISM Continuous Integration
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Prisma DB Push
+        run: npx prisma db push
+
+      - name: Seed Synthetic Demonstration Data
+        run: npm run seed
+
+      - name: Execute Vitest Integration Suite
+        run: npm test
+
+      - name: Build Backend API
+        run: npm run build --workspace=apps/api
+
+      - name: Build Frontend Web Application
+        run: npm run build --workspace=apps/web

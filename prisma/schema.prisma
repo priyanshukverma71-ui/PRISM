@@ -1,0 +1,417 @@
+// PRISM Regulatory Intelligence Platform - Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Model with Role-Based Access Control
+model User {
+  id             String      @id @default(uuid())
+  email          String      @unique
+  passwordHash   String
+  name           String
+  role           String      // INSTITUTION_USER, REGIONAL_OFFICER, BUREAU_OFFICER, COMMITTEE_REVIEWER, SYSTEM_ADMIN, AUDITOR
+  institutionId  String?
+  region         String?     // Northern, Western, Southern, Eastern, South-Western, Central
+  status         String      @default("ACTIVE") // ACTIVE, SUSPENDED, INACTIVE
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  institution    Institution? @relation(fields: [institutionId], references: [id])
+  assignments    CaseAssignment[] @relation("AssignedTo")
+  givenAssignments CaseAssignment[] @relation("AssignedBy")
+  submissions    ComplianceSubmission[]
+  evcCommittees  EVCVisit[]   @relation("CommitteeLead")
+
+  @@index([role])
+  @@index([region])
+}
+
+// Higher Education / Technical Institution
+model Institution {
+  id             String      @id @default(uuid())
+  code           String      @unique // e.g. "AICTE-WRO-1092"
+  name           String
+  type           String      // Engineering, Management, Pharmacy, Architecture, Polytechnic
+  region         String      // Northern, Western, Southern, Eastern, South-Western, Central
+  address        String
+  contactEmail   String
+  contactPhone   String
+  accreditation  String?     // NAAC A++, NBA Accredited, etc.
+  status         String      @default("ACTIVE")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  users          User[]
+  applications   Application[]
+  obligations    ComplianceObligation[]
+  submissions    ComplianceSubmission[]
+  documents      DocumentRecord[]
+
+  @@index([code])
+  @@index([region])
+}
+
+// Workflow Definition Templates
+model WorkflowTemplate {
+  id             String      @id @default(uuid())
+  code           String      @unique // "ONLY_SCRUTINY", "SCRUTINY_EVC", "EVC_SAC", "FULL_CYCLE"
+  name           String
+  description    String
+  activeVersion  Int         @default(1)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  versions       WorkflowVersion[]
+  applications   Application[]
+}
+
+// Workflow Version for Auditable Rule Changes
+model WorkflowVersion {
+  id               String           @id @default(uuid())
+  templateId       String
+  versionNumber    Int
+  isPublished      Boolean          @default(false)
+  publishedAt      DateTime?
+  publishedBy      String?
+  changeSummary    String?
+  stagesJson       String           // JSON string of stages and their prerequisites
+  transitionsJson  String           // JSON string of allowed transitions
+  createdAt        DateTime         @default(now())
+
+  template         WorkflowTemplate @relation(fields: [templateId], references: [id])
+  applications     Application[]
+
+  @@unique([templateId, versionNumber])
+}
+
+// Application Case Model
+model Application {
+  id                   String           @id @default(uuid())
+  applicationNumber    String           @unique // e.g. "APP-2025-WRO-0491"
+  institutionId        String
+  region               String
+  category             String           // NEW_INSTITUTION, EXTENSION_OF_APPROVAL, INTAKE_INCREASE, NEW_COURSE
+  academicYear         String           @default("2025-2026")
+  workflowTemplateId   String
+  workflowVersionId    String
+  currentStage         String           // DRAFT, SUBMITTED, UNDER_SCRUTINY, CLARIFICATION_REQUIRED, RESUBMITTED, EVC_PENDING, EVC_SCHEDULED, EVC_COMPLETED, COMMITTEE_REVIEW, AWAITING_DECISION, APPROVED, REJECTED, CLOSED
+  status               String           @default("IN_PROGRESS") // IN_PROGRESS, PENDING_ACTION, ACTION_REQUIRED, APPROVED, REJECTED, RETURNED
+  priority             String           @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  riskScore            Float            @default(0.0) // 0 to 100
+  riskCategory         String           @default("LOW") // LOW, MEDIUM, HIGH, CRITICAL
+  riskFactorsJson      String           @default("[]") // JSON string of reasons
+  assignedOfficerId    String?
+  submissionDate       DateTime         @default(now())
+  stageEntryDate       DateTime         @default(now())
+  deadlineDate         DateTime?
+  observations         String?
+  returnReason         String?
+  metadataJson         String           @default("{}") // Additional details (intake, courses, fees)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  institution          Institution      @relation(fields: [institutionId], references: [id])
+  workflowTemplate     WorkflowTemplate @relation(fields: [workflowTemplateId], references: [id])
+  workflowVersion      WorkflowVersion  @relation(fields: [workflowVersionId], references: [id])
+  stageHistories       StageHistory[]
+  assignments          CaseAssignment[]
+  evcVisits            EVCVisit[]
+  complianceObligations ComplianceObligation[]
+  documentRecords      DocumentRecord[]
+  alerts               Alert[]
+
+  @@index([applicationNumber])
+  @@index([institutionId])
+  @@index([region])
+  @@index([currentStage])
+  @@index([status])
+  @@index([riskCategory])
+  @@index([deadlineDate])
+}
+
+// Stage History for Complete State Tracking
+model StageHistory {
+  id                  String       @id @default(uuid())
+  applicationId       String
+  fromStage           String
+  toStage             String
+  actorId             String
+  actorRole           String
+  action              String       // TRANSITION, RETURN, RESUBMIT, APPROVE, REJECT, ESCALATE
+  comments            String?
+  prerequisitesCheck  String?      // JSON summary of verified items
+  durationHours       Float?
+  createdAt           DateTime     @default(now())
+
+  application         Application  @relation(fields: [applicationId], references: [id])
+
+  @@index([applicationId])
+}
+
+// Case Assignment to Reviewers/Officers
+model CaseAssignment {
+  id             String       @id @default(uuid())
+  applicationId  String
+  assignedToId   String
+  assignedById   String
+  role           String       // SCRUTINY_OFFICER, EVC_MEMBER, SAC_MEMBER
+  assignedAt     DateTime     @default(now())
+  dueAt          DateTime?
+  status         String       @default("ACTIVE") // ACTIVE, COMPLETED, REASSIGNED
+  notes          String?
+
+  application    Application  @relation(fields: [applicationId], references: [id])
+  assignedTo     User         @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedBy     User         @relation("AssignedBy", fields: [assignedById], references: [id])
+
+  @@index([applicationId])
+  @@index([assignedToId])
+}
+
+// Expert Visit Committee (EVC) Schedule & Findings
+model EVCVisit {
+  id                     String       @id @default(uuid())
+  applicationId          String
+  visitType              String       @default("REGULAR") // REGULAR, SURPRISE, RE_INSPECTION
+  status                 String       @default("PENDING_SCHEDULE") // PENDING_SCHEDULE, SCHEDULED, IN_PROGRESS, COMPLETED, RESCHEDULED, CANCELLED
+  scheduledDate          DateTime?
+  completedDate          DateTime?
+  schedulingDeadline     DateTime?
+  committeeLeadId        String?
+  committeeMembersJson   String       @default("[]") // Array of names/emails
+  findings               String?
+  reportHash             String?      // SHA-256 of inspection report
+  reportReference        String?
+  reschedulingReason     String?
+  prerequisitesSatisfied Boolean      @default(false)
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+
+  application            Application  @relation(fields: [applicationId], references: [id])
+  committeeLead          User?        @relation("CommitteeLead", fields: [committeeLeadId], references: [id])
+
+  @@index([applicationId])
+  @@index([status])
+  @@index([scheduledDate])
+}
+
+// Compliance Obligations (Underlying regulatory requirements)
+model ComplianceObligation {
+  id                 String       @id @default(uuid())
+  institutionId      String
+  applicationId      String?
+  title              String       // e.g. "Land Ownership & Registered Lease Deed"
+  category           String       // LAND_BUILDING, FACULTY_CADRE, CORPUS_FUND, SAFETY_NOC, AFFILIATION
+  description        String
+  prescribedDocType  String       // LEASE_DEED, FIRE_NOC, BUILDING_COMPLETION, AICTE_AFFIDAVIT
+  dueDate            DateTime
+  warningDate        DateTime?
+  status             String       @default("PENDING") // PENDING, SUBMITTED, VERIFIED, DEFICIENT, EXPIRED
+  severity           String       @default("HIGH") // LOW, MEDIUM, HIGH, CRITICAL
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  institution        Institution  @relation(fields: [institutionId], references: [id])
+  application        Application? @relation(fields: [applicationId], references: [id])
+  submissions        ComplianceSubmission[]
+  alerts             Alert[]
+
+  @@index([institutionId])
+  @@index([applicationId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// Compliance Evidence Submissions
+model ComplianceSubmission {
+  id              String               @id @default(uuid())
+  obligationId    String
+  institutionId   String
+  submittedById   String
+  submissionDate  DateTime             @default(now())
+  docCategory     String
+  documentUrl     String?
+  fileHash        String               // SHA-256 verification hash
+  fileName        String
+  fileSize        Int                  // in bytes
+  version         Int                  @default(1)
+  status          String               @default("PENDING_VERIFICATION") // PENDING_VERIFICATION, VERIFIED, RETURNED_WITH_DEFICIENCY
+  reviewerId      String?
+  reviewComments  String?
+  reviewedAt      DateTime?
+  createdAt       DateTime             @default(now())
+
+  obligation      ComplianceObligation @relation(fields: [obligationId], references: [id])
+  institution     Institution          @relation(fields: [institutionId], references: [id])
+  submittedBy     User                 @relation(fields: [submittedById], references: [id])
+
+  @@index([obligationId])
+  @@index([institutionId])
+  @@index([status])
+}
+
+// Institutional Document Records with Expiry Tracking
+model DocumentRecord {
+  id                  String       @id @default(uuid())
+  institutionId       String
+  applicationId       String?
+  title               String
+  category            String       // LEASE_AGREEMENT, FIRE_SAFETY_CERTIFICATE, BUILDING_STABILITY, NOC_STATE_GOVT
+  issueDate           DateTime?
+  expiryDate          DateTime?
+  storageKey          String
+  fileHash            String       // SHA-256
+  fileName            String
+  fileSize            Int
+  verificationStatus  String       @default("PENDING") // PENDING, VERIFIED, REJECTED, EXPIRED
+  reviewerId          String?
+  reviewComments      String?
+  metadataJson        String       @default("{}")
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  institution         Institution  @relation(fields: [institutionId], references: [id])
+  application         Application? @relation(fields: [applicationId], references: [id])
+
+  @@index([institutionId])
+  @@index([applicationId])
+  @@index([expiryDate])
+  @@index([verificationStatus])
+}
+
+// System Alerts & Notifications
+model Alert {
+  id                String       @id @default(uuid())
+  eventKey          String       @unique // Stable deduplication key
+  recipientRole     String?      // REGIONAL_OFFICER, INSTITUTION_USER, etc.
+  recipientId       String?
+  applicationId     String?
+  obligationId      String?
+  title             String
+  message           String
+  severity          String       @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  alertType         String       // DEADLINE_WARNING, OVERDUE_STAGE, DOCUMENT_EXPIRY, MISSING_EVIDENCE, EVC_UNSCHEDULED
+  status            String       @default("UNRESOLVED") // UNRESOLVED, ACKNOWLEDGED, RESOLVED, DISMISSED
+  resolvedAt        DateTime?
+  resolvedById      String?
+  escalationLevel   Int          @default(1) // 1: Officer, 2: Bureau Head, 3: Regional Director
+  metadataJson      String       @default("{}")
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  application       Application?          @relation(fields: [applicationId], references: [id])
+  obligation        ComplianceObligation? @relation(fields: [obligationId], references: [id])
+  deliveryAttempts  AlertDeliveryAttempt[]
+  escalations       EscalationEvent[]
+
+  @@index([status])
+  @@index([severity])
+  @@index([recipientRole])
+  @@index([applicationId])
+}
+
+// Record of Notification Deliveries (In-App, Email mock, etc.)
+model AlertDeliveryAttempt {
+  id           String       @id @default(uuid())
+  alertId      String
+  channel      String       // IN_APP, EMAIL, SMS
+  destination  String
+  status       String       // DELIVERED, FAILED, QUEUED
+  error        String?
+  attemptedAt  DateTime     @default(now())
+
+  alert        Alert        @relation(fields: [alertId], references: [id])
+
+  @@index([alertId])
+}
+
+// Escalation Tracking
+model EscalationEvent {
+  id               String       @id @default(uuid())
+  alertId          String
+  fromLevel        Int
+  toLevel          Int
+  escalatedToRole  String
+  escalatedToId    String?
+  reason           String
+  createdAt        DateTime     @default(now())
+
+  alert            Alert        @relation(fields: [alertId], references: [id])
+
+  @@index([alertId])
+}
+
+// Compliance Flight Recorder (Tamper-Evident Immutable Audit Log)
+model AuditEvent {
+  id              String       @id @default(uuid())
+  sequenceIndex   Int          // Sequential increment for tamper detection
+  correlationId   String
+  actorId         String
+  actorName       String
+  actorRole       String
+  actionType      String       // LOGIN, APPLICATION_CREATE, STAGE_TRANSITION, RETURN_CASE, EVC_SCHEDULE, DOCUMENT_VERIFIED, SIMULATION_RUN, RULE_PUBLISH
+  targetType      String       // APPLICATION, COMPLIANCE, EVC, DOCUMENT, WORKFLOW_RULE, USER
+  targetId        String
+  previousState   String?      // JSON string of state before
+  newState        String?      // JSON string of state after
+  reason          String?
+  documentHash    String?
+  ruleVersion     String?
+  currentHash     String       // SHA-256(previousHash + sequence + timestamp + payload)
+  previousHash    String
+  createdAt       DateTime     @default(now())
+
+  @@index([sequenceIndex])
+  @@index([correlationId])
+  @@index([actionType])
+  @@index([targetId])
+  @@index([createdAt])
+}
+
+// PRISM FutureLab Simulation Scenarios
+model SimulationScenario {
+  id                   String       @id @default(uuid())
+  name                 String
+  description          String?
+  createdById          String
+  baseApplicationId    String
+  parametersJson       String       // e.g. { scrutinyDelayDays: 5, evcDelayDays: 3, missingPrerequisites: ['FIRE_NOC'] }
+  resultsJson          String       // simulated timeline, risk changes, blocked stages, interventions
+  createdAt            DateTime     @default(now())
+
+  @@index([baseApplicationId])
+  @@index([createdById])
+}
+
+// APH Rule Compiler Drafts
+model RuleDraft {
+  id                   String       @id @default(uuid())
+  ruleId               String       @unique // e.g. "APH-2025-CH2-SEC4.1"
+  sourceDoc            String       // "AICTE Approval Process Handbook 2025-26"
+  sourceVersion        String       // "2025.1"
+  pageRef              String?
+  sectionRef           String?
+  title                String
+  extractedText        String
+  conditionJson        String
+  actionJson           String
+  timelineDays         Int?
+  prerequisitesJson    String       @default("[]")
+  confidenceScore      Float        @default(0.95)
+  notes                String?
+  status               String       @default("DRAFT") // DRAFT, REVIEWED, APPROVED, REJECTED, PUBLISHED
+  reviewerId           String?
+  reviewComments       String?
+  publishedVersionId   String?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@index([ruleId])
+  @@index([status])
+}
