@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.js';
-import { PrismCore } from '../components/3d/PrismCore.js';
-import { Shield, Lock, Mail, ArrowRight, UserCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ChevronDown } from 'lucide-react';
 
 export function LoginPage() {
   const { login, switchRole } = useAuth();
@@ -10,8 +9,10 @@ export function LoginPage() {
 
   const [email, setEmail] = useState('admin@prism.aicte.gov.in');
   const [password, setPassword] = useState('Prism@2025');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showDemoPersonas, setShowDemoPersonas] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +22,7 @@ export function LoginPage() {
       await login(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Authentication rejected. Verify credentials.');
+      setError(err.message || 'Invalid credentials. Please verify and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -41,111 +42,128 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian text-silver flex flex-col justify-center items-center p-6 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-platinum/5 blur-[140px] pointer-events-none rounded-full" />
-
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center z-10">
-        {/* Left: 3D PRISM Core & Value Prop */}
-        <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-6">
-          <div className="w-full max-w-[320px] aspect-square rounded-2xl overflow-hidden border border-graphite-border shadow-platinum">
-            <PrismCore activityState="NORMAL" className="w-full h-full" />
-          </div>
-
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gunmetal/60 border border-graphite-border text-xs font-mono text-platinum mb-3">
-              <Shield size={13} className="text-status-success" />
-              <span>AICTE Regulatory Intelligence Platform</span>
-            </div>
-            <h1 className="text-3xl font-extrabold text-silver-bright tracking-tight">
-              PRISM <span className="text-platinum text-xl font-normal block mt-1">Approval & Compliance Intelligence</span>
-            </h1>
-            <p className="text-sm text-slate-muted mt-2 italic font-serif">
-              "See the Risk. Predict the Delay. Act Before the Deadline."
-            </p>
+    <div className="min-h-screen bg-obsidian text-silver flex flex-col justify-center items-center px-4 py-12 relative">
+      <div className="w-full max-w-md">
+        {/* Subtle Brand Mark */}
+        <div className="flex justify-center mb-6">
+          <div className="w-10 h-10 rounded-xl bg-gunmetal border border-platinum/30 flex items-center justify-center shadow-platinum">
+            <span className="font-mono font-bold text-silver-bright text-lg">Δ</span>
           </div>
         </div>
 
-        {/* Right: Authentication Card & Role Selector */}
-        <div className="platinum-card rounded-2xl p-8 border border-graphite-border backdrop-blur-xl">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-silver-bright">Enterprise Access Sign In</h2>
-            <p className="text-xs text-slate-muted">Enter credentials or select a verified regulatory role below</p>
+        {/* Focused Login Card */}
+        <div className="platinum-card rounded-2xl p-8 border border-graphite-border shadow-2xl">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-silver-bright tracking-tight">
+              Welcome back to PRISM
+            </h1>
+            <p className="text-xs text-slate-muted mt-1.5 leading-relaxed">
+              Sign in to your regulatory intelligence workspace and approval monitoring dashboard.
+            </p>
           </div>
 
           {error && (
-            <div className="mb-5 p-3 rounded-lg bg-status-critical/15 border border-status-critical/40 text-status-critical text-xs flex items-center gap-2">
-              <span>{error}</span>
+            <div className="mb-5 p-3 rounded-lg bg-status-critical/10 border border-status-critical/30 text-status-critical text-xs">
+              {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-platinum mb-1.5 font-mono">Official Email</label>
+              <label className="block text-xs font-medium text-platinum mb-1.5">
+                Email address
+              </label>
               <div className="relative">
-                <Mail size={15} className="absolute left-3 top-3 text-slate-muted" />
+                <Mail size={15} className="absolute left-3.5 top-3 text-slate-muted pointer-events-none" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-obsidian border border-graphite-border rounded-lg pl-9 pr-3 py-2 text-xs text-silver focus:outline-none focus:border-platinum transition-colors"
+                  placeholder="name@aicte.gov.in"
+                  className="w-full bg-obsidian border border-graphite-border rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-silver placeholder-slate-subtle focus:outline-none focus:border-platinum transition-colors"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-platinum mb-1.5 font-mono">Security Token / Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-medium text-platinum">
+                  Password
+                </label>
+              </div>
               <div className="relative">
-                <Lock size={15} className="absolute left-3 top-3 text-slate-muted" />
+                <Lock size={15} className="absolute left-3.5 top-3 text-slate-muted pointer-events-none" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-obsidian border border-graphite-border rounded-lg pl-9 pr-3 py-2 text-xs text-silver focus:outline-none focus:border-platinum transition-colors"
+                  placeholder="••••••••••••"
+                  className="w-full bg-obsidian border border-graphite-border rounded-xl pl-10 pr-10 py-2.5 text-xs text-silver placeholder-slate-subtle focus:outline-none focus:border-platinum transition-colors"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-2.5 text-slate-muted hover:text-silver focus:outline-none cursor-pointer"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full platinum-button-primary py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full mt-2 platinum-button-primary py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 transition-all"
             >
-              <span>{submitting ? 'Verifying Credentials...' : 'Authenticate Session'}</span>
-              <ArrowRight size={15} />
+              <span>{submitting ? 'Signing in...' : 'Sign In'}</span>
+              <ArrowRight size={14} />
             </button>
           </form>
 
-          {/* Quick Demo Role Picker */}
-          <div className="mt-8 pt-6 border-t border-graphite-border">
-            <p className="text-[11px] font-mono text-slate-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <UserCheck size={13} className="text-platinum" />
-              <span>1-Click Test Personas (Synthetic Demo)</span>
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: 'System Admin', role: 'SYSTEM_ADMIN' },
-                { label: 'Regional Officer', role: 'REGIONAL_OFFICER' },
-                { label: 'Bureau Officer', role: 'BUREAU_OFFICER' },
-                { label: 'Committee Reviewer', role: 'COMMITTEE_REVIEWER' },
-                { label: 'Institution (VJTI)', role: 'INSTITUTION_USER' },
-                { label: 'Auditor (CAG)', role: 'AUDITOR' },
-              ].map((p) => (
-                <button
-                  key={p.role}
-                  type="button"
-                  onClick={() => handleQuickLogin(p.role)}
-                  className="platinum-button-secondary py-1.5 px-2 rounded text-[11px] font-mono truncate text-left hover:border-platinum/50"
-                >
-                  ⚡ {p.label}
-                </button>
-              ))}
-            </div>
+          {/* Secondary / Demo Access moved out of main focus */}
+          <div className="mt-6 pt-5 border-t border-graphite-border/70 text-center">
+            <button
+              type="button"
+              onClick={() => setShowDemoPersonas(!showDemoPersonas)}
+              className="text-[11px] font-mono text-slate-muted hover:text-platinum transition-colors inline-flex items-center gap-1 cursor-pointer"
+            >
+              <span>Demo evaluation personas</span>
+              <ChevronDown size={13} className={`transform transition-transform ${showDemoPersonas ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showDemoPersonas && (
+              <div className="grid grid-cols-2 gap-1.5 mt-3 pt-2 text-left animate-in fade-in duration-200">
+                {[
+                  { label: 'System Admin', role: 'SYSTEM_ADMIN' },
+                  { label: 'Regional Officer', role: 'REGIONAL_OFFICER' },
+                  { label: 'Bureau Officer', role: 'BUREAU_OFFICER' },
+                  { label: 'Committee Reviewer', role: 'COMMITTEE_REVIEWER' },
+                  { label: 'Institution (VJTI)', role: 'INSTITUTION_USER' },
+                  { label: 'Auditor (CAG)', role: 'AUDITOR' },
+                ].map((p) => (
+                  <button
+                    key={p.role}
+                    type="button"
+                    onClick={() => handleQuickLogin(p.role)}
+                    className="platinum-button-secondary py-1 px-2 rounded-lg text-[10px] font-mono truncate text-left cursor-pointer"
+                  >
+                    ⚡ {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Subtle, understated footer notice */}
+        <p className="text-[11px] text-slate-muted/70 text-center mt-6 font-mono">
+          PRISM // Proactive Regulatory Intelligence & Status Monitoring
+        </p>
       </div>
     </div>
   );
 }
+export default LoginPage;
