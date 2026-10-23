@@ -8,7 +8,7 @@ export function CopilotLauncher() {
   return (
     <button
       onClick={toggleCopilot}
-      className={`fixed bottom-6 right-6 z-50 copilot-circular-pop flex items-center justify-center cursor-pointer group select-none transition-all duration-300 ${
+      className={`fixed bottom-6 right-6 z-[9999] copilot-circular-pop flex items-center justify-center cursor-pointer group select-none transition-all duration-300 ${
         isOpen
           ? '!border-platinum/50 shadow-[0_0_24px_rgba(255,255,255,0.25)]'
           : '!border-[#F5BA42]/45 hover:!border-[#F5BA42] shadow-[0_0_20px_rgba(245,186,66,0.25)]'

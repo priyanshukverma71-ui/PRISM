@@ -483,7 +483,7 @@ export function DashboardPage() {
             <span className="text-platinum font-medium">Click any node to open case dossier</span>
           </div>
 
-          <div className="h-[580px] w-full relative rounded-2xl overflow-hidden border border-graphite-border shadow-2xl">
+          <div className="h-[580px] w-full relative isolate z-0 rounded-2xl overflow-hidden border border-graphite-border shadow-2xl">
             <ErrorBoundary
               fallbackTitle="3D Graphics Acceleration Unavailable"
               fallbackMessage="Your browser or device does not currently have WebGL hardware acceleration enabled. Switch to Task view or Analytics above to view your applications."

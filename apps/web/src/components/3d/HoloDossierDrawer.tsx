@@ -41,7 +41,7 @@ export function HoloDossierDrawer({
   projectedRisk = Math.min(100, Math.max(0, projectedRisk));
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-graphite/95 backdrop-blur-2xl border-l border-graphite-border shadow-2xl z-50 flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
+    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-graphite/95 backdrop-blur-2xl border-l border-graphite-border shadow-2xl z-[9990] flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-graphite-border">
         <div>

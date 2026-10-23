@@ -225,6 +225,7 @@ function InstitutionalNode({
         position={[0, 0.85, 0]}
         center
         distanceFactor={12}
+        zIndexRange={[10, 0]}
         style={{ pointerEvents: 'none', userSelect: 'none' }}
       >
         <div
@@ -341,7 +342,7 @@ export function SpatialHolodeck({
   const isHighAlert = cases.some((c) => c.riskCategory === 'CRITICAL');
 
   return (
-    <div className="relative w-full h-full min-h-[580px] bg-obsidian rounded-2xl overflow-hidden border border-graphite-border shadow-2xl select-none">
+    <div className="relative isolate z-0 w-full h-full min-h-[580px] bg-obsidian rounded-2xl overflow-hidden border border-graphite-border shadow-2xl select-none">
       {/* 3D Canvas */}
       <Canvas
         camera={{ position: [0, 4, 12], fov: 48 }}

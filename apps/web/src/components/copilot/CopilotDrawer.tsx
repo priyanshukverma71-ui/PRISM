@@ -218,7 +218,7 @@ I am ready for your questions. Ask any compliance query or select a specific app
     <div
       role="dialog"
       aria-label="PRISM Copilot AI Compliance Assistant"
-      className="fixed bottom-22 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[410px] h-[560px] max-h-[calc(100vh-7.5rem)] flex flex-col rounded-3xl overflow-hidden copilot-pop-card shadow-2xl animate-in zoom-in-95 fade-in slide-in-from-bottom-4 duration-250 select-none border border-white/12"
+      className="fixed bottom-22 right-4 sm:right-6 z-[9999] w-[calc(100vw-2rem)] sm:w-[410px] h-[560px] max-h-[calc(100vh-7.5rem)] flex flex-col rounded-3xl overflow-hidden copilot-pop-card shadow-2xl animate-in zoom-in-95 fade-in slide-in-from-bottom-4 duration-250 select-none border border-white/12"
     >
       {/* ============================================================== */}
       {/* 1. MINIMALIST TOP HEADER                                       */}
