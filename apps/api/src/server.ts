@@ -73,7 +73,7 @@ app.use(errorHandler);
 
 // Background Worker for Deadline Evaluation (Every 10 minutes)
 let alertInterval: NodeJS.Timeout | null = null;
-if (config.nodeEnv !== 'test') {
+if (config.nodeEnv !== 'test' && !process.env.VERCEL) {
   alertInterval = setInterval(async () => {
     try {
       console.log('[PRISM SCHEDULER] Running scheduled deadline and SLA risk evaluation...');
@@ -87,23 +87,30 @@ if (config.nodeEnv !== 'test') {
   }, 10 * 60 * 1000);
 }
 
-// Start Server
-const server = app.listen(config.port, () => {
-  console.log(`\n======================================================`);
-  console.log(`  PRISM — Proactive Regulatory Intelligence Platform  `);
-  console.log(`  Server online on port ${config.port} (${config.nodeEnv})`);
-  console.log(`  Timezone: ${config.timezone}`);
-  console.log(`======================================================\n`);
-});
+// Start Server (only if not running on Vercel Serverless)
+let server: any = null;
+if (!process.env.VERCEL && config.nodeEnv !== 'test') {
+  server = app.listen(config.port, () => {
+    console.log(`\n======================================================`);
+    console.log(`  PRISM — Proactive Regulatory Intelligence Platform  `);
+    console.log(`  Server online on port ${config.port} (${config.nodeEnv})`);
+    console.log(`  Timezone: ${config.timezone}`);
+    console.log(`======================================================\n`);
+  });
+}
 
 // Graceful Shutdown
 function handleShutdown(signal: string) {
   console.log(`\n[PRISM] Received ${signal}. Gracefully terminating server...`);
   if (alertInterval) clearInterval(alertInterval);
-  server.close(() => {
-    console.log('[PRISM] Server shutdown complete.');
+  if (server) {
+    server.close(() => {
+      console.log('[PRISM] Server shutdown complete.');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 }
 
 process.on('SIGTERM', () => handleShutdown('SIGTERM'));
