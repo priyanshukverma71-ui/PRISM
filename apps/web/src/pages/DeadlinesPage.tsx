@@ -14,6 +14,7 @@ import {
   Building,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
+import { formatDaysRemaining, formatPlainStage } from '../lib/plainLanguage.js';
 
 export function DeadlinesPage() {
   const [filter, setFilter] = useState<'ALL' | 'CRITICAL_7_DAYS' | 'EXPIRING_30_DAYS' | 'OVERDUE'>('ALL');
@@ -222,8 +223,19 @@ export function DeadlinesPage() {
           </div>
         ) : (
           filtered.map((item) => {
-            const isOverdue = item.daysRemaining < 0;
-            const isImminent = item.daysRemaining >= 0 && item.daysRemaining <= 7;
+            const timing = formatDaysRemaining(item.targetDate);
+            const isOverdue = timing.isOverdue;
+            const isAtRisk = timing.isAtRisk;
+
+            const nextActionText = (() => {
+              if (item.type === 'DOCUMENT_EXPIRY') {
+                return 'Next action: Upload the missing evidence / renewed statutory certificate';
+              }
+              if (item.type === 'EVC_CUTOFF') {
+                return 'Next action: Appoint 3-member expert inspection panel and issue visit schedule';
+              }
+              return 'Next action: Prioritize dossier determination before statutory stage cutoff';
+            })();
 
             return (
               <div
@@ -231,7 +243,7 @@ export function DeadlinesPage() {
                 className={`platinum-card platinum-card-hover p-4 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
                   isOverdue
                     ? 'border-status-critical/40 bg-status-critical/5'
-                    : isImminent
+                    : isAtRisk
                     ? 'border-status-warning/40 bg-status-warning/5'
                     : 'border-graphite-border hover:border-platinum/40'
                 }`}
@@ -242,16 +254,12 @@ export function DeadlinesPage() {
                       className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
                         isOverdue
                           ? 'bg-status-critical/20 text-status-critical border-status-critical/40'
-                          : isImminent
+                          : isAtRisk
                           ? 'bg-status-warning/20 text-status-warning border-status-warning/40'
                           : 'bg-gunmetal text-platinum border-graphite-border'
                       }`}
                     >
-                      {isOverdue
-                        ? `OVERDUE BY ${Math.abs(item.daysRemaining)} DAYS`
-                        : isImminent
-                        ? `DUE IN ${item.daysRemaining} DAYS`
-                        : `${item.daysRemaining} DAYS REMAINING`}
+                      {timing.text}
                     </span>
 
                     <span className="text-[11px] font-mono text-slate-muted">
@@ -265,8 +273,13 @@ export function DeadlinesPage() {
                       <Building size={12} className="text-platinum" />
                       <span>{item.institution}</span>
                       <span>•</span>
-                      <span>Target Cutoff: {new Date(item.targetDate).toLocaleDateString()}</span>
+                      <span>Target Date: {new Date(item.targetDate).toLocaleDateString()}</span>
                     </p>
+                  </div>
+
+                  {/* Plain Language Next Action */}
+                  <div className="p-2 rounded bg-obsidian border border-graphite-border/70 text-[11px] font-mono text-platinum">
+                    {nextActionText}
                   </div>
                 </div>
 

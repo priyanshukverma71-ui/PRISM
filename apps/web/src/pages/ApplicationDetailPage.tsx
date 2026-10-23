@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
+import { formatPlainStage, formatPlainComplianceStatus, formatDaysRemaining } from '../lib/plainLanguage.js';
 
 export function ApplicationDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -231,7 +232,7 @@ export function ApplicationDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="platinum-card p-3 rounded-lg border border-graphite-border">
           <span className="text-[10px] font-mono text-slate-muted uppercase">Processing Stage</span>
-          <p className="text-sm font-bold text-silver-bright font-mono mt-0.5">{(app.currentStage || '').replace(/_/g, ' ')}</p>
+          <p className="text-sm font-bold text-silver-bright font-mono mt-0.5">{formatPlainStage(app.currentStage)}</p>
         </div>
         <div className="platinum-card p-3 rounded-lg border border-graphite-border">
           <span className="text-[10px] font-mono text-slate-muted uppercase">Stage SLA Deadline</span>
@@ -417,30 +418,32 @@ export function ApplicationDetailPage() {
             </Link>
           </div>
 
-          {(app.complianceObligations || []).map((ob: any) => (
-            <div key={ob.id} className="p-4 rounded-lg bg-obsidian border border-graphite-border space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-silver-bright">{ob.title}</h4>
-                  <p className="text-[11px] text-slate-muted mt-0.5">{ob.description}</p>
-                </div>
-                <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
-                    ob.status === 'VERIFIED'
-                      ? 'bg-status-success/15 text-status-success border-status-success/30'
-                      : ob.status === 'DEFICIENT' || ob.status === 'EXPIRED'
-                      ? 'bg-status-critical/15 text-status-critical border-status-critical/30'
-                      : 'bg-status-warning/15 text-status-warning border-status-warning/30'
-                  }`}
-                >
-                  {ob.status}
-                </span>
-              </div>
+          {(app.complianceObligations || []).map((ob: any) => {
+            const statusInfo = formatPlainComplianceStatus(ob.status, ob.dueDate);
+            const timing = formatDaysRemaining(ob.dueDate);
 
-              <div className="flex items-center justify-between pt-2 border-t border-graphite-border text-xs">
-                <span className="text-[10px] font-mono text-slate-muted">
-                  Due: {new Date(ob.dueDate).toISOString().split('T')[0]}
-                </span>
+            return (
+              <div key={ob.id} className="p-4 rounded-lg bg-obsidian border border-graphite-border space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold text-silver-bright">{ob.title}</h4>
+                    <p className="text-[11px] text-slate-muted">{ob.description}</p>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border whitespace-nowrap ${statusInfo.badgeStyle}`}
+                  >
+                    {statusInfo.label}
+                  </span>
+                </div>
+
+                <div className="p-2 rounded bg-gunmetal/30 border border-graphite-border/70 text-[11px] font-mono text-platinum">
+                  {statusInfo.nextAction}
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-graphite-border text-xs">
+                  <span className="text-[10px] font-mono text-slate-muted">
+                    Due Date: {timing.text} ({new Date(ob.dueDate).toISOString().split('T')[0]})
+                  </span>
 
                 {/* Evidence Submission Button */}
                 {ob.status !== 'VERIFIED' && (
@@ -458,7 +461,8 @@ export function ApplicationDetailPage() {
                 )}
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
       )}
 

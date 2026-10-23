@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
+import { formatPlainComplianceStatus, formatDaysRemaining } from '../lib/plainLanguage.js';
 
 export function CompliancePage() {
   const { user } = useAuth();
@@ -140,6 +141,8 @@ export function CompliancePage() {
         ) : (
           obligations!.map((ob: any) => {
             const latestSub = ob.submissions && ob.submissions.length > 0 ? ob.submissions[0] : null;
+            const statusInfo = formatPlainComplianceStatus(ob.status, ob.dueDate);
+            const timing = formatDaysRemaining(ob.dueDate);
 
             return (
               <div
@@ -147,45 +150,54 @@ export function CompliancePage() {
                 className="platinum-card p-5 rounded-xl border border-graphite-border space-y-3"
               >
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-bold text-sm text-silver-bright">{ob.title}</span>
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
-                          ob.status === 'VERIFIED'
-                            ? 'bg-status-success/15 text-status-success border-status-success/30'
-                            : ob.status === 'DEFICIENT' || ob.status === 'EXPIRED'
-                            ? 'bg-status-critical/15 text-status-critical border-status-critical/30'
-                            : ob.status === 'SUBMITTED'
-                            ? 'bg-blue-950/50 text-blue-300 border-blue-800'
-                            : 'bg-status-warning/15 text-status-warning border-status-warning/30'
-                        }`}
+                        className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold border ${statusInfo.badgeStyle}`}
                       >
-                        {ob.status}
+                        {statusInfo.label}
                       </span>
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-gunmetal text-platinum">
                         Severity: {ob.severity}
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-muted mt-1">{ob.description}</p>
-                    <p className="text-[11px] font-mono text-slate-muted mt-1">
-                      Target: {ob.institution.name} ({ob.institution.code}) • {ob.category}
+                    <p className="text-xs text-slate-muted">{ob.description}</p>
+                    <p className="text-[11px] font-mono text-slate-muted">
+                      Target: {ob.institution.name} ({ob.institution.code}) • Category: {String(ob.category).replace(/_/g, ' ')}
                     </p>
                   </div>
 
-                  <div className="text-right self-start">
-                    <span className="text-[11px] font-mono text-slate-muted block">
-                      Statutory Due Date:
+                  <div className="text-right self-start sm:self-auto bg-gunmetal/40 px-3 py-1.5 rounded-lg border border-graphite-border">
+                    <span className="text-[10px] font-mono text-slate-muted block">
+                      Statutory Deadline:
                     </span>
                     <span
                       className={`font-mono text-xs font-bold ${
-                        new Date(ob.dueDate) < new Date() ? 'text-status-critical' : 'text-platinum'
+                        timing.isOverdue
+                          ? 'text-status-critical'
+                          : timing.isAtRisk
+                          ? 'text-status-warning'
+                          : 'text-platinum'
                       }`}
                     >
-                      {new Date(ob.dueDate).toISOString().split('T')[0]}
+                      {timing.text} ({new Date(ob.dueDate).toLocaleDateString()})
                     </span>
                   </div>
+                </div>
+
+                {/* Plain-Language Next Action Guidance Banner */}
+                <div className="p-2.5 rounded-lg bg-obsidian border border-graphite-border/70 flex items-center justify-between text-xs">
+                  <span className="font-mono text-platinum font-semibold flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-platinum" />
+                    <span>{statusInfo.nextAction}</span>
+                  </span>
+                  {latestSub && (
+                    <span className="text-[10px] font-mono text-slate-muted hidden md:inline">
+                      Evidence v{latestSub.version} ({latestSub.fileName}): {latestSub.status === 'PENDING_VERIFICATION' ? 'Waiting for review' : latestSub.status}
+                    </span>
+                  )}
                 </div>
 
                 {/* Submissions & Actions Bar */}

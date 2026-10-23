@@ -25,6 +25,12 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
+import {
+  formatPlainStage,
+  formatDaysRemaining,
+  formatPlainComplianceStatus,
+  formatPlainAlert,
+} from '../lib/plainLanguage.js';
 import { SpatialHolodeck, SpatialCaseNode } from '../components/3d/SpatialHolodeck.js';
 import { ChronosScrubber } from '../components/3d/ChronosScrubber.js';
 import { HoloDossierDrawer } from '../components/3d/HoloDossierDrawer.js';
@@ -438,46 +444,55 @@ export function DashboardPage() {
               ) : (
                 <div className="space-y-3">
                   {/* Deficient / Overdue Obligations */}
-                  {urgentObligations.map((obl: any) => (
-                    <div
-                      key={obl.id}
-                      className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-status-critical/40 bg-status-critical/5 space-y-2.5 transition-all"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-status-critical/20 text-status-critical uppercase border border-status-critical/30">
-                          {obl.status} DEFICIENCY
-                        </span>
-                        <span className="text-[10px] font-mono text-status-critical font-semibold">
-                          Overdue: {new Date(obl.dueDate).toLocaleDateString()}
-                        </span>
-                      </div>
+                  {urgentObligations.map((obl: any) => {
+                    const statusInfo = formatPlainComplianceStatus(obl.status, obl.dueDate);
+                    const timing = formatDaysRemaining(obl.dueDate);
 
-                      <div>
-                        <h4 className="text-xs font-bold text-silver-bright">{obl.title}</h4>
-                        <p className="text-[11px] text-slate-muted line-clamp-2 mt-0.5">
-                          {obl.institution?.name} • Category: {obl.category}
-                        </p>
-                      </div>
-
-                      <Link
-                        to="/compliance"
-                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-status-critical hover:text-white transition-colors pt-1 border-t border-status-critical/20 w-full"
+                    return (
+                      <div
+                        key={obl.id}
+                        className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-status-critical/40 bg-status-critical/5 space-y-2 transition-all"
                       >
-                        <span>Rectify / Review Deficiency</span>
-                        <ArrowRight size={12} />
-                      </Link>
-                    </div>
-                  ))}
+                        <div className="flex items-start justify-between gap-2">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${statusInfo.badgeStyle}`}>
+                            {statusInfo.label}
+                          </span>
+                          <span className="text-[10px] font-mono text-status-critical font-semibold">
+                            {timing.text}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-xs font-bold text-silver-bright">{obl.title}</h4>
+                          <p className="text-[11px] text-slate-muted line-clamp-1 mt-0.5">
+                            {obl.institution?.name} • Category: {String(obl.category).replace(/_/g, ' ')}
+                          </p>
+                        </div>
+
+                        <div className="p-2 rounded bg-obsidian border border-graphite-border/70 text-[11px] font-mono text-platinum">
+                          {statusInfo.nextAction}
+                        </div>
+
+                        <Link
+                          to="/compliance"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-status-critical hover:text-white transition-colors pt-1 border-t border-status-critical/20 w-full"
+                        >
+                          <span>Rectify / Submit Missing Evidence</span>
+                          <ArrowRight size={12} />
+                        </Link>
+                      </div>
+                    );
+                  })}
 
                   {/* Clarification Required Applications */}
                   {returnedApplications.map((app: any) => (
                     <div
                       key={app.id}
-                      className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-status-warning/40 bg-status-warning/5 space-y-2.5 transition-all"
+                      className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-status-warning/40 bg-status-warning/5 space-y-2 transition-all"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-status-warning/20 text-status-warning uppercase border border-status-warning/30">
-                          CLARIFICATION REQUIRED
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-status-warning/20 text-status-warning uppercase border border-status-warning/30">
+                          Action Required — Clarification Needed
                         </span>
                         <span className="text-[10px] font-mono text-silver">{app.applicationNumber}</span>
                       </div>
@@ -487,6 +502,10 @@ export function DashboardPage() {
                         <p className="text-[11px] text-slate-muted line-clamp-2 mt-0.5">
                           {app.returnReason || 'Scrutiny identified missing structural safety proof. Awaiting response.'}
                         </p>
+                      </div>
+
+                      <div className="p-2 rounded bg-obsidian border border-graphite-border/70 text-[11px] font-mono text-status-warning">
+                        Next action: Upload requested clarification documents in case dossier
                       </div>
 
                       <Link
@@ -499,30 +518,47 @@ export function DashboardPage() {
                     </div>
                   ))}
 
-                  {/* High Severity Alerts */}
-                  {criticalAlerts.slice(0, 3).map((al: any) => (
-                    <div
-                      key={al.id}
-                      className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-graphite-border space-y-2 transition-all"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-gunmetal text-status-critical border border-status-critical/30">
-                          {al.severity} ALERT
-                        </span>
-                        <span className="text-[10px] font-mono text-slate-muted">
-                          {new Date(al.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-xs font-medium text-silver-bright line-clamp-2">{al.title}</p>
-                      <Link
-                        to="/alerts"
-                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-platinum hover:text-white transition-colors"
+                  {/* High Severity Alerts with 4-Part Structure */}
+                  {criticalAlerts.slice(0, 3).map((al: any) => {
+                    const alertAnatomy = formatPlainAlert(al);
+
+                    return (
+                      <div
+                        key={al.id}
+                        className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-graphite-border space-y-2.5 transition-all"
                       >
-                        <span>Acknowledge / Escalate</span>
-                        <ArrowRight size={12} />
-                      </Link>
-                    </div>
-                  ))}
+                        <div className="flex items-center justify-between">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-gunmetal text-status-critical border border-status-critical/30">
+                            {alertAnatomy.urgencyText}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-muted">
+                            Tier {al.escalationLevel}
+                          </span>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-bold text-silver-bright">{alertAnatomy.issue}</p>
+                          <p className="text-[11px] text-slate-muted mt-1 leading-relaxed">
+                            <span className="text-platinum font-semibold">Impact: </span>
+                            {alertAnatomy.whyItMatters}
+                          </p>
+                        </div>
+
+                        <div className="p-2 rounded bg-obsidian border border-graphite-border/70 text-[10px] font-mono text-slate-muted flex items-center justify-between">
+                          <span className="truncate max-w-[200px]">Owner: {alertAnatomy.owner}</span>
+                          <span className="text-platinum font-semibold">{alertAnatomy.actionLabel}</span>
+                        </div>
+
+                        <Link
+                          to={alertAnatomy.actionUrl}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-platinum hover:text-white transition-colors w-full border-t border-graphite-border pt-1.5"
+                        >
+                          <span>{alertAnatomy.actionLabel}</span>
+                          <ArrowRight size={12} />
+                        </Link>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -549,9 +585,7 @@ export function DashboardPage() {
               <div className="space-y-3">
                 {/* Expiring Legal Documents */}
                 {expiringDocs.map((doc: any) => {
-                  const daysRemaining = doc.expiryDate
-                    ? Math.max(0, Math.ceil((new Date(doc.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-                    : 15;
+                  const timing = formatDaysRemaining(doc.expiryDate);
 
                   return (
                     <div
@@ -559,10 +593,14 @@ export function DashboardPage() {
                       className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-graphite-border space-y-2.5 transition-all"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-status-warning/20 text-status-warning uppercase border border-status-warning/30">
-                          EXPIRES IN {daysRemaining} DAYS
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
+                          timing.isAtRisk
+                            ? 'bg-status-warning/20 text-status-warning border-status-warning/40'
+                            : 'bg-gunmetal text-silver border-graphite-border'
+                        }`}>
+                          {timing.text}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-muted">{doc.category}</span>
+                        <span className="text-[10px] font-mono text-slate-muted">{String(doc.category).replace(/_/g, ' ')}</span>
                       </div>
 
                       <div>
@@ -572,8 +610,12 @@ export function DashboardPage() {
                         </p>
                       </div>
 
+                      <div className="p-2 rounded bg-obsidian border border-graphite-border/70 text-[11px] font-mono text-platinum">
+                        Next action: Upload renewed municipal/legal certificate
+                      </div>
+
                       <Link
-                        to="/documents"
+                        to="/deadlines"
                         className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-platinum hover:text-white transition-colors pt-1 border-t border-graphite-border w-full"
                       >
                         <span>Inspect Certificate &amp; Renew</span>
@@ -584,61 +626,84 @@ export function DashboardPage() {
                 })}
 
                 {/* EVC Visits Pending Committee Assignment */}
-                {pendingEvc.map((evc: any) => (
-                  <div
-                    key={evc.id}
-                    className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-graphite-border space-y-2.5 transition-all"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-platinum/15 text-platinum uppercase border border-platinum/30">
-                        EVC CUTOFF: 4 DAYS
-                      </span>
-                      <span className="text-[10px] font-mono text-slate-muted">
-                        {evc.application?.region} Region
-                      </span>
-                    </div>
+                {pendingEvc.map((evc: any) => {
+                  const timing = formatDaysRemaining(evc.schedulingDeadline);
 
-                    <div>
-                      <h4 className="text-xs font-bold text-silver-bright">
-                        {evc.application?.institution?.name}
-                      </h4>
-                      <p className="text-[11px] text-slate-muted line-clamp-1 mt-0.5">
-                        App: {evc.application?.applicationNumber} • 3-Expert Team Required
-                      </p>
-                    </div>
-
-                    <Link
-                      to="/evc"
-                      className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-platinum hover:text-white transition-colors pt-1 border-t border-graphite-border w-full"
+                  return (
+                    <div
+                      key={evc.id}
+                      className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-graphite-border space-y-2.5 transition-all"
                     >
-                      <span>Form Committee &amp; Schedule Visit</span>
-                      <ArrowRight size={12} />
-                    </Link>
-                  </div>
-                ))}
+                      <div className="flex items-start justify-between gap-2">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
+                          timing.isAtRisk
+                            ? 'bg-status-warning/20 text-status-warning border-status-warning/40'
+                            : 'bg-platinum/15 text-platinum border-platinum/30'
+                        }`}>
+                          {timing.text}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-muted">
+                          {evc.application?.region} Region
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="text-xs font-bold text-silver-bright">
+                          {evc.application?.institution?.name}
+                        </h4>
+                        <p className="text-[11px] text-slate-muted line-clamp-1 mt-0.5">
+                          App: {evc.application?.applicationNumber} • 3-Expert Team Required
+                        </p>
+                      </div>
+
+                      <div className="p-2 rounded bg-obsidian border border-graphite-border/70 text-[11px] font-mono text-platinum">
+                        Next action: Appoint committee lead and confirm physical inspection window
+                      </div>
+
+                      <Link
+                        to="/evc"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-platinum hover:text-white transition-colors pt-1 border-t border-graphite-border w-full"
+                      >
+                        <span>Form Committee &amp; Schedule Visit</span>
+                        <ArrowRight size={12} />
+                      </Link>
+                    </div>
+                  );
+                })}
 
                 {/* Applications Approaching Cutoff */}
                 {applicationsApproachingCutoff.map((app: any) => {
-                  const daysLeft = Math.ceil((new Date(app.deadlineDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                  const timing = formatDaysRemaining(app.deadlineDate);
+
                   return (
                     <div
                       key={app.id}
-                      className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-graphite-border space-y-2 transition-all"
+                      className="platinum-card platinum-card-hover p-3.5 rounded-xl border border-graphite-border space-y-2.5 transition-all"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-gunmetal text-silver border border-graphite-border">
-                          {(app.currentStage || 'UNDER_REVIEW').replace(/_/g, ' ')}
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-gunmetal text-silver border border-graphite-border">
+                          {formatPlainStage(app.currentStage)}
                         </span>
                         <span className="text-[10px] font-mono font-bold text-status-warning">
-                          {daysLeft} days to statutory cutoff
+                          {timing.text}
                         </span>
                       </div>
-                      <p className="text-xs font-medium text-silver-bright truncate">
-                        {app.institution?.name} ({app.applicationNumber})
-                      </p>
+                      <div>
+                        <p className="text-xs font-bold text-silver-bright truncate">
+                          {app.institution?.name}
+                        </p>
+                        <p className="text-[11px] font-mono text-slate-muted">
+                          Dossier #{app.applicationNumber}
+                        </p>
+                      </div>
+
+                      <div className="p-2 rounded bg-obsidian border border-graphite-border/70 text-[11px] font-mono text-platinum">
+                        Next action: Complete scrutiny determination before stage cutoff
+                      </div>
+
                       <Link
                         to={`/applications/${app.id}`}
-                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-platinum hover:text-white transition-colors"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-platinum hover:text-white transition-colors border-t border-graphite-border pt-1.5 w-full"
                       >
                         <span>Prioritize Determination</span>
                         <ArrowRight size={12} />

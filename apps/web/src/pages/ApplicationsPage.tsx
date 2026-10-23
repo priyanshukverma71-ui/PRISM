@@ -12,6 +12,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
+import { formatPlainStage, formatDaysRemaining } from '../lib/plainLanguage.js';
 
 export function ApplicationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -196,13 +197,13 @@ export function ApplicationsPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium border ${getStageBadgeColor(app.currentStage)}`}>
-                        {(app.currentStage || '').replace(/_/g, ' ')}
+                        {formatPlainStage(app.currentStage)}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-[11px]">
                       {app.deadlineDate ? (
-                        <span className={new Date(app.deadlineDate) < new Date() ? 'text-status-critical font-bold' : 'text-slate-muted'}>
-                          {new Date(app.deadlineDate).toISOString().split('T')[0]}
+                        <span className={formatDaysRemaining(app.deadlineDate).isAtRisk ? 'text-status-warning font-bold' : 'text-slate-muted'}>
+                          {formatDaysRemaining(app.deadlineDate).text}
                         </span>
                       ) : (
                         <span className="text-slate-muted">N/A</span>

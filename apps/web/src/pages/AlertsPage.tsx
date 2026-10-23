@@ -11,8 +11,13 @@ import {
   ShieldAlert,
   ArrowRight,
   TrendingUp,
+  UserCheck,
+  HelpCircle,
+  Wrench,
+  AlertCircle,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
+import { formatPlainAlert } from '../lib/plainLanguage.js';
 
 export function AlertsPage() {
   const queryClient = useQueryClient();
@@ -133,90 +138,127 @@ export function AlertsPage() {
             <p className="text-sm font-medium text-silver">No unresolved alerts in this category</p>
           </div>
         ) : (
-          alerts!.map((alt: any) => (
-            <div
-              key={alt.id}
-              className={`platinum-card p-5 rounded-xl border transition-all ${
-                alt.severity === 'CRITICAL'
-                  ? 'border-status-critical/40 bg-status-critical/5'
-                  : alt.severity === 'HIGH'
-                  ? 'border-status-warning/40 bg-status-warning/5'
-                  : 'border-graphite-border'
-              }`}
-            >
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                <div className="space-y-1.5 flex-1">
+          alerts!.map((alt: any) => {
+            const anatomy = formatPlainAlert(alt);
+            const isCritical = alt.severity === 'CRITICAL';
+            const isHigh = alt.severity === 'HIGH';
+
+            return (
+              <div
+                key={alt.id}
+                className={`platinum-card p-5 rounded-2xl border transition-all space-y-4 ${
+                  isCritical
+                    ? 'border-status-critical/50 bg-status-critical/5 shadow-platinum'
+                    : isHigh
+                    ? 'border-status-warning/40 bg-status-warning/5'
+                    : 'border-graphite-border'
+                }`}
+              >
+                {/* Alert Top Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-graphite-border/70 pb-3">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
-                        alt.severity === 'CRITICAL'
+                      className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold border uppercase ${
+                        isCritical
                           ? 'bg-status-critical/20 text-status-critical border-status-critical/40'
-                          : alt.severity === 'HIGH'
+                          : isHigh
                           ? 'bg-status-warning/20 text-status-warning border-status-warning/40'
                           : 'bg-gunmetal text-silver border-graphite-border'
                       }`}
                     >
-                      {alt.severity}
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-gunmetal text-platinum">
-                      Escalation Level: {alt.escalationLevel}
+                      {anatomy.urgencyText}
                     </span>
                     <span className="text-[10px] font-mono text-slate-muted">
-                      Target Role: {alt.recipientRole || 'ANY'}
+                      Escalation Tier {alt.escalationLevel} • {new Date(alt.createdAt).toLocaleString()}
                     </span>
                   </div>
 
-                  <h4 className="text-sm font-bold text-silver-bright">{alt.title}</h4>
-                  <p className="text-xs text-silver/80">{alt.message}</p>
-
-                  {/* Delivery Attempts & Dispatch Channels */}
-                  <div className="pt-2 flex flex-wrap items-center gap-2 text-[10px] font-mono text-slate-muted">
-                    <span>Dispatched Channels:</span>
-                    {alt.deliveryAttempts?.map((d: any) => (
-                      <span key={d.id} className="px-2 py-0.5 rounded bg-obsidian border border-graphite-border text-silver">
-                        {d.channel}: {d.status} ({d.destination})
+                  <div className="flex items-center gap-2">
+                    {alt.status === 'UNRESOLVED' ? (
+                      <button
+                        onClick={() => handleOpenResolve(alt)}
+                        className="platinum-button-primary px-3 py-1.5 rounded-lg text-xs font-semibold"
+                      >
+                        Resolve Alert
+                      </button>
+                    ) : (
+                      <span className="text-xs font-mono text-status-success font-bold flex items-center gap-1">
+                        <CheckCircle size={13} />
+                        <span>RESOLVED</span>
                       </span>
-                    ))}
+                    )}
+
+                    {anatomy.actionUrl && (
+                      <Link
+                        to={anatomy.actionUrl}
+                        className="platinum-button-secondary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                      >
+                        <span>{anatomy.actionLabel}</span>
+                        <ArrowRight size={12} />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                {/* The 4-Part Alert Anatomy Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  {/* 1. The Issue */}
+                  <div className="p-3 rounded-xl bg-obsidian/80 border border-graphite-border space-y-1">
+                    <span className="text-[10px] font-mono uppercase font-bold text-platinum tracking-wider flex items-center gap-1.5">
+                      <AlertCircle size={12} className={isCritical ? 'text-status-critical' : 'text-status-warning'} />
+                      <span>1. The Issue</span>
+                    </span>
+                    <p className="text-silver-bright font-medium leading-relaxed">
+                      {anatomy.issue}
+                    </p>
                   </div>
 
-                  {/* Escalation Trace */}
-                  {alt.escalations && alt.escalations.length > 0 && (
-                    <div className="p-2 rounded bg-obsidian border border-graphite-border text-[11px] font-mono text-status-warning">
-                      <span>Escalated to {alt.escalations[0].escalatedToRole}: </span>
-                      <span>{alt.escalations[0].reason}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 self-start md:self-center">
-                  {alt.status === 'UNRESOLVED' ? (
-                    <button
-                      onClick={() => handleOpenResolve(alt)}
-                      className="platinum-button-primary px-3 py-1.5 rounded-lg text-xs font-semibold"
-                    >
-                      Resolve Alert
-                    </button>
-                  ) : (
-                    <span className="text-xs font-mono text-status-success font-bold flex items-center gap-1">
-                      <CheckCircle size={13} />
-                      <span>RESOLVED</span>
+                  {/* 2. Why It Matters */}
+                  <div className="p-3 rounded-xl bg-obsidian/80 border border-graphite-border space-y-1">
+                    <span className="text-[10px] font-mono uppercase font-bold text-status-warning tracking-wider flex items-center gap-1.5">
+                      <HelpCircle size={12} />
+                      <span>2. Why It Matters</span>
                     </span>
-                  )}
+                    <p className="text-silver/80 leading-relaxed">
+                      {anatomy.whyItMatters}
+                    </p>
+                  </div>
 
-                  {alt.applicationId && (
-                    <Link
-                      to={`/applications/${alt.applicationId}`}
-                      className="platinum-button-secondary p-1.5 rounded-lg text-slate-muted hover:text-silver"
-                      title="Inspect Case"
-                    >
-                      <ArrowRight size={15} />
-                    </Link>
-                  )}
+                  {/* 3. Who Owns the Next Step */}
+                  <div className="p-3 rounded-xl bg-obsidian/80 border border-graphite-border space-y-1">
+                    <span className="text-[10px] font-mono uppercase font-bold text-platinum tracking-wider flex items-center gap-1.5">
+                      <UserCheck size={12} />
+                      <span>3. Who Owns the Next Step</span>
+                    </span>
+                    <p className="text-silver-bright font-semibold">
+                      {anatomy.owner}
+                    </p>
+                  </div>
+
+                  {/* 4. How to Resolve It */}
+                  <div className="p-3 rounded-xl bg-obsidian/80 border border-graphite-border space-y-1">
+                    <span className="text-[10px] font-mono uppercase font-bold text-status-success tracking-wider flex items-center gap-1.5">
+                      <Wrench size={12} />
+                      <span>4. How to Resolve It</span>
+                    </span>
+                    <p className="text-silver/90 font-medium leading-relaxed">
+                      {anatomy.howToResolve}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Escalation & Delivery Trace (if any) */}
+                {alt.escalations && alt.escalations.length > 0 && (
+                  <div className="p-2.5 rounded-lg bg-obsidian border border-status-warning/30 text-[11px] font-mono text-status-warning flex items-center gap-2">
+                    <TrendingUp size={13} />
+                    <span>
+                      Escalated to {alt.escalations[0].escalatedToRole}: {alt.escalations[0].reason}
+                    </span>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
