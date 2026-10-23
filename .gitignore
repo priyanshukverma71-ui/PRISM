@@ -8,10 +8,10 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Database
-prism.db
 prism.db-journal
 *.sqlite
 *.sqlite-journal
+!prisma/prism.db
 
 # Environment
 .env

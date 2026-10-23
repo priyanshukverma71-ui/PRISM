@@ -1,21 +1,30 @@
 import fs from 'fs';
 import path from 'path';
 
-// If deployed on Vercel with SQLite fallback, copy prism.db to /tmp so it is writable
+// Pre-copy seeded SQLite database to /tmp on Vercel cold start
 if (process.env.VERCEL) {
   try {
     const tmpDbPath = '/tmp/prism.db';
-    if (!fs.existsSync(tmpDbPath)) {
-      const localDbPath = path.resolve(process.cwd(), 'prisma/prism.db');
-      if (fs.existsSync(localDbPath)) {
-        fs.copyFileSync(localDbPath, tmpDbPath);
+    if (!fs.existsSync(tmpDbPath) || fs.statSync(tmpDbPath).size < 1000) {
+      const candidates = [
+        path.resolve(process.cwd(), 'prisma/prism.db'),
+        path.resolve(__dirname, '../prisma/prism.db'),
+        path.resolve(__dirname, 'prisma/prism.db'),
+      ];
+
+      for (const cand of candidates) {
+        if (fs.existsSync(cand) && fs.statSync(cand).size > 1000) {
+          fs.copyFileSync(cand, tmpDbPath);
+          console.log(`[PRISM VERCEL PRE-BOOT] Database deployed from ${cand}`);
+          break;
+        }
       }
     }
     if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
       process.env.DATABASE_URL = `file:${tmpDbPath}`;
     }
-  } catch (e) {
-    console.warn('Vercel SQLite tmp setup warning:', e);
+  } catch (err) {
+    console.warn('[PRISM VERCEL PRE-BOOT] Warning:', err);
   }
 }
 

@@ -2,6 +2,11 @@
   "version": 2,
   "buildCommand": "npx prisma generate && npm run build --workspace=apps/web",
   "outputDirectory": "apps/web/dist",
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "prisma/prism.db"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
