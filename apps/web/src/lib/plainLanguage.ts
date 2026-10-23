@@ -553,7 +553,7 @@ export function formatPlainAlert(alert: any): PlainAlertAnatomy {
  */
 export function safeFormatError(err: any, fallbackMessage = "We couldn't save your changes. Try again."): string {
   if (!err) return fallbackMessage;
-  const raw = typeof err === 'string' ? err : err.message || '';
+  const raw = typeof err === 'string' ? err : typeof err?.message === 'string' ? err.message : '';
   if (!raw) return fallbackMessage;
 
   // Filter out internal database, Prisma, or code stack traces

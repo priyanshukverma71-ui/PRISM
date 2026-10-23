@@ -10,7 +10,9 @@ import {
   Compass,
   AlertCircle,
   Shield,
+  Sparkles,
 } from 'lucide-react';
+import { useCopilot } from '../../context/CopilotContext.js';
 import {
   BarChart,
   Bar,
@@ -169,6 +171,7 @@ export function MinimalTaskView({
   totalDueSoonCount,
   stageChartData,
 }: MinimalTaskViewProps) {
+  const { openCopilot } = useCopilot();
   const [taskFilter, setTaskFilter] = useState<'ALL' | 'URGENT' | 'DUE_SOON'>('ALL');
   const [showLedgerDrawer, setShowLedgerDrawer] = useState<boolean>(false);
   const [showAuditDrawer, setShowAuditDrawer] = useState<boolean>(false);
@@ -405,9 +408,52 @@ export function MinimalTaskView({
               </h3>
             </div>
 
-            <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-[#FF626B]/15 text-[#FF626B] border border-[#FF626B]/30">
-              {totalAttentionCount} urgent
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-[#FF626B]/15 text-[#FF626B] border border-[#FF626B]/30">
+                {totalAttentionCount} urgent
+              </span>
+              <button
+                onClick={() => openCopilot(urgentObligations[0]?.applicationId || applications[0]?.id, 'Why is this application at risk?')}
+                className="liquid-glass-pill px-2.5 py-1 rounded-lg text-xs font-semibold text-[#F5BA42] inline-flex items-center gap-1.5 cursor-pointer hover:text-white"
+                title="Ask PRISM Copilot why this application is at risk"
+              >
+                <Sparkles size={11} />
+                <span>Ask Copilot</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Tactile Golden Bar Array matching Card 3 of reference mockup */}
+          <div className="bg-[#0F1217] p-3 rounded-xl border border-[#1A1D24] space-y-1.5">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-muted">
+              <span className="text-[#F5BA42] font-semibold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F5BA42]" />
+                Urgency index by statutory category
+              </span>
+              <span>Distribution count</span>
+            </div>
+            <div className="flex items-end justify-between gap-2 h-14 pt-1">
+              {[
+                { label: 'Deficiency', height: urgentObligations.length > 0 ? '88%' : '20%', count: urgentObligations.length },
+                { label: 'Clarify', height: returnedApplications.length > 0 ? '72%' : '15%', count: returnedApplications.length },
+                { label: 'Critical', height: criticalAlerts.length > 0 ? '94%' : '25%', count: criticalAlerts.length },
+                { label: 'Expiring', height: expiringDocs.length > 0 ? '65%' : '20%', count: expiringDocs.length },
+                { label: 'EVC Visit', height: pendingEvc.length > 0 ? '58%' : '15%', count: pendingEvc.length },
+                { label: 'Cutoff', height: applicationsApproachingCutoff.length > 0 ? '82%' : '30%', count: applicationsApproachingCutoff.length },
+              ].map((b, bIdx) => (
+                <div key={bIdx} className="flex-1 flex flex-col items-center gap-1 group">
+                  <div className="w-full bg-[#181C25] rounded-t-sm h-10 flex items-end">
+                    <div
+                      style={{ height: b.height }}
+                      className="w-full rounded-t-sm bg-gradient-to-t from-[#9B701E] via-[#DFA02B] to-[#F5BA42] group-hover:brightness-125 transition-all shadow-[0_0_6px_rgba(245,186,66,0.25)]"
+                    />
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-muted group-hover:text-silver transition-colors">
+                    {b.count}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Scannable Priority Rows */}
@@ -542,9 +588,19 @@ export function MinimalTaskView({
               </h3>
             </div>
 
-            <span className="text-xs font-mono text-slate-muted">
-              Ranked queue
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-slate-muted">
+                Ranked queue
+              </span>
+              <button
+                onClick={() => openCopilot(applications[0]?.id, 'Generate a compliance checklist for our next steps')}
+                className="liquid-glass-pill px-2.5 py-1 rounded-lg text-xs font-semibold text-silver inline-flex items-center gap-1.5 cursor-pointer hover:text-white"
+                title="Generate an actionable statutory checklist with Copilot"
+              >
+                <Sparkles size={11} className="text-[#F5BA42]" />
+                <span>Checklist</span>
+              </button>
+            </div>
           </div>
 
           {/* Minimalist Action Rows with Hairline Dividers */}

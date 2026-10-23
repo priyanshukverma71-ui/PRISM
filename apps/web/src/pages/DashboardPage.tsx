@@ -35,6 +35,7 @@ import { SpatialHolodeck, SpatialCaseNode } from '../components/3d/SpatialHolode
 import { ChronosScrubber } from '../components/3d/ChronosScrubber.js';
 import { HoloDossierDrawer } from '../components/3d/HoloDossierDrawer.js';
 import { MinimalTaskView } from '../components/dashboard/MinimalTaskView.js';
+import { ErrorBoundary } from '../components/common/ErrorBoundary.js';
 import {
   BarChart,
   Bar,
@@ -483,13 +484,18 @@ export function DashboardPage() {
           </div>
 
           <div className="h-[580px] w-full relative rounded-2xl overflow-hidden border border-graphite-border shadow-2xl">
-            <SpatialHolodeck
-              cases={spatialNodes}
-              onSelectCase={(c) => setSelectedCase(c)}
-              selectedCaseId={selectedCase?.id}
-              temporalOffsetDays={temporalOffset}
-              activeIntervention={activeIntervention}
-            />
+            <ErrorBoundary
+              fallbackTitle="3D Graphics Acceleration Unavailable"
+              fallbackMessage="Your browser or device does not currently have WebGL hardware acceleration enabled. Switch to Task view or Analytics above to view your applications."
+            >
+              <SpatialHolodeck
+                cases={spatialNodes}
+                onSelectCase={(c) => setSelectedCase(c)}
+                selectedCaseId={selectedCase?.id}
+                temporalOffsetDays={temporalOffset}
+                activeIntervention={activeIntervention}
+              />
+            </ErrorBoundary>
           </div>
 
           <ChronosScrubber

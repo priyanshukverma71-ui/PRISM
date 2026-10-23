@@ -17,9 +17,11 @@ import {
   Send,
   History,
   Info,
+  Sparkles,
 } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
+import { useCopilot } from '../context/CopilotContext.js';
 import {
   formatPlainStage,
   formatPlainComplianceStatus,
@@ -39,6 +41,7 @@ export function ApplicationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { openCopilot } = useCopilot();
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'evc' | 'compliance' | 'documents'>('overview');
@@ -269,6 +272,15 @@ export function ApplicationDetailPage() {
                 <span>Request clarification</span>
               </button>
             )}
+
+          {/* Ask PRISM Copilot */}
+          <button
+            onClick={() => openCopilot(app.id, 'Why is this application at risk?')}
+            className="liquid-glass-pill px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-[#F5BA42] border-[#F5BA42]/40 hover:border-[#F5BA42] cursor-pointer shadow-sm"
+          >
+            <Sparkles size={13} className="text-[#F5BA42]" />
+            <span>Ask Copilot</span>
+          </button>
 
           {/* Simulation Shortcut */}
           <Link

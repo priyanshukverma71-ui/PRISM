@@ -20,6 +20,8 @@ import {
 import { useAuth } from '../../context/AuthContext.js';
 import { apiRequest } from '../../lib/api.js';
 import { formatRole } from '../../lib/plainLanguage.js';
+import { CopilotLauncher } from '../copilot/CopilotLauncher.js';
+import { CopilotDrawer } from '../copilot/CopilotDrawer.js';
 
 interface NavItem {
   label: string;
@@ -361,6 +363,10 @@ export function AppLayout() {
         <main className="flex-1 overflow-y-auto bg-obsidian p-6">
           <Outlet />
         </main>
+
+        {/* Global PRISM Copilot AI Compliance Assistant */}
+        <CopilotLauncher />
+        <CopilotDrawer />
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ import configRoutes from './config/routes.js';
 import ruleRoutes from './rules/routes.js';
 import reportRoutes from './reports/routes.js';
 import healthRoutes from './health/routes.js';
+import copilotRoutes from './copilot/routes.js';
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/api/config', configRoutes);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/copilot', copilotRoutes);
 
 // Root fallback
 app.get('/', (req, res) => {
