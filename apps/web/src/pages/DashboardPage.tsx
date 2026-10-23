@@ -28,6 +28,8 @@ import {
   formatRole,
   formatSeverity,
   formatActionType,
+  formatStatus,
+  getApplicationOwner,
 } from '../lib/plainLanguage.js';
 import { SpatialHolodeck, SpatialCaseNode } from '../components/3d/SpatialHolodeck.js';
 import { ChronosScrubber } from '../components/3d/ChronosScrubber.js';
@@ -815,63 +817,72 @@ export function DashboardPage() {
                   <thead>
                     <tr className="border-b border-graphite-border text-slate-muted font-medium text-[11px]">
                       <th className="py-2.5 px-3">Application</th>
-                      <th className="py-2.5 px-3">Institution</th>
-                      <th className="py-2.5 px-3">Category</th>
                       <th className="py-2.5 px-3">Current stage</th>
-                      <th className="py-2.5 px-3">Deadline</th>
-                      <th className="py-2.5 px-3">Risk rating</th>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3">Next deadline</th>
+                      <th className="py-2.5 px-3">Owner</th>
                       <th className="py-2.5 px-3 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-graphite-border">
                     {waitingApplications.map((app: any) => {
                       const timing = formatDaysRemaining(app.deadlineDate);
+                      const owner = getApplicationOwner(app);
 
                       return (
-                        <tr key={app.id} className="hover:bg-graphite-hover transition-colors">
-                          <td className="py-3 px-3 font-mono font-medium text-silver-bright">
-                            <Link to={`/applications/${app.id}`} className="hover:text-platinum">
+                        <tr key={app.id} className="hover:bg-graphite-hover transition-colors group">
+                          <td className="py-3 px-3">
+                            <Link
+                              to={`/applications/${app.id}`}
+                              className="font-mono font-medium text-silver-bright group-hover:text-platinum block tracking-tight"
+                            >
                               {app.applicationNumber}
                             </Link>
-                          </td>
-                          <td className="py-3 px-3">
-                            <span className="font-medium text-silver block truncate max-w-xs">
-                              {app.institution?.name}
-                            </span>
-                            <span className="text-[10px] text-slate-muted">
-                              {app.region} region
+                            <span className="text-[10px] text-slate-muted block truncate max-w-xs mt-0.5">
+                              {app.institution?.name} • {app.region} region
                             </span>
                           </td>
-                          <td className="py-3 px-3 text-slate-muted">
-                            {formatCategory(app.category)}
-                          </td>
                           <td className="py-3 px-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gunmetal text-silver border border-graphite-border">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gunmetal text-silver border border-graphite-border">
                               {formatPlainStage(app.currentStage)}
                             </span>
                           </td>
                           <td className="py-3 px-3">
-                            <span className={timing.isAtRisk ? 'text-status-warning font-medium' : 'text-slate-muted'}>
-                              {timing.text}
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${
+                                app.status === 'APPROVED'
+                                  ? 'bg-status-success/15 text-status-success border-status-success/30'
+                                  : app.status === 'REJECTED'
+                                  ? 'bg-status-critical/15 text-status-critical border-status-critical/30'
+                                  : app.status === 'ACTION_REQUIRED' || app.status === 'RETURNED'
+                                  ? 'bg-status-warning/15 text-status-warning border-status-warning/30'
+                                  : 'bg-platinum/10 text-platinum border-platinum/25'
+                              }`}
+                            >
+                              {formatStatus(app.status || 'IN_PROGRESS')}
                             </span>
                           </td>
                           <td className="py-3 px-3">
                             <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
-                                app.riskCategory === 'CRITICAL'
-                                  ? 'bg-status-critical/15 text-status-critical border-status-critical/30'
-                                  : app.riskCategory === 'HIGH'
-                                  ? 'bg-status-warning/15 text-status-warning border-status-warning/30'
-                                  : 'bg-gunmetal text-silver border-graphite-border'
-                              }`}
+                              className={
+                                timing.isAtRisk || timing.isOverdue
+                                  ? 'text-status-warning font-medium'
+                                  : 'text-slate-muted'
+                              }
                             >
-                              {app.riskScore} • {formatSeverity(app.riskCategory)}
+                              {timing.text}
                             </span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="font-medium text-silver text-[11px]">{owner.name}</div>
+                            {owner.role && (
+                              <div className="text-[10px] text-slate-muted">{owner.role}</div>
+                            )}
                           </td>
                           <td className="py-3 px-3 text-right">
                             <Link
                               to={`/applications/${app.id}`}
-                              className="platinum-button-secondary py-1 px-2.5 rounded text-xs font-medium inline-flex items-center gap-1"
+                              className="platinum-button-secondary py-1 px-2.5 rounded text-xs font-medium inline-flex items-center gap-1 group-hover:border-platinum/40 transition-colors"
                             >
                               <span>View application</span>
                               <ArrowRight size={11} />

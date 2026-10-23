@@ -54,6 +54,9 @@ const DISPLAY_LABELS: Record<string, string> = {
   PENDING_SCHEDULE: 'Waiting to be scheduled',
   SCHEDULED: 'Scheduled',
   IN_PROGRESS: 'In progress',
+  PENDING_ACTION: 'Action required',
+  ACTION_REQUIRED: 'Action required',
+  RETURNED: 'Returned for clarification',
   COMPLETED: 'Completed',
   VERIFIED: 'Verified & compliant',
   DEFICIENT: 'Clarification needed',
@@ -172,6 +175,83 @@ export function formatIntervention(intervention?: string | null): string {
 export function formatPlainStage(stage?: string | null): string {
   if (!stage) return 'In review';
   return formatDisplayLabel(stage);
+}
+
+/**
+ * Resolves the primary person, officer, or statutory authority responsible
+ * for the application's current stage.
+ */
+export function getApplicationOwner(app?: any): { name: string; role?: string } {
+  if (!app) return { name: 'Assigned review officer' };
+
+  // 1. Direct active officer assignment
+  const activeAssignment = Array.isArray(app.assignments)
+    ? app.assignments.find((a: any) => a?.status === 'ACTIVE') || app.assignments[0]
+    : null;
+
+  if (activeAssignment?.assignedTo?.name) {
+    return {
+      name: activeAssignment.assignedTo.name,
+      role: activeAssignment.assignedTo.role ? formatRole(activeAssignment.assignedTo.role) : undefined,
+    };
+  }
+
+  // 2. Stage-based statutory/operational owner
+  switch (app.currentStage) {
+    case 'DRAFT':
+      return {
+        name: app.institution?.name ? `${app.institution.name} leadership` : 'Institution applicant',
+        role: 'Applicant',
+      };
+    case 'SUBMITTED':
+    case 'UNDER_SCRUTINY':
+    case 'RESUBMITTED':
+      return {
+        name: 'Regional review officer',
+        role: `${app.region || 'Regional'} bureau`,
+      };
+    case 'CLARIFICATION_REQUIRED':
+      return {
+        name: app.institution?.name ? `${app.institution.name} applicant` : 'Institution applicant',
+        role: 'Pending clarification',
+      };
+    case 'EVC_PENDING':
+      return {
+        name: 'Zonal bureau lead',
+        role: 'Inspection coordinator',
+      };
+    case 'EVC_SCHEDULED':
+      return {
+        name: 'Inspection committee lead',
+        role: '3-member expert panel',
+      };
+    case 'EVC_COMPLETED':
+      return {
+        name: 'Regional directorate',
+        role: 'Post-inspection evaluation',
+      };
+    case 'COMMITTEE_REVIEW':
+      return {
+        name: 'Standing committee panel',
+        role: 'Headquarters review',
+      };
+    case 'AWAITING_DECISION':
+      return {
+        name: 'Competent authority',
+        role: 'Approval council',
+      };
+    case 'APPROVED':
+    case 'REJECTED':
+    case 'CLOSED':
+      return {
+        name: 'Concluded',
+        role: 'Record archived',
+      };
+    default:
+      return {
+        name: 'Assigned review officer',
+      };
+  }
 }
 
 /**
