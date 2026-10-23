@@ -11,10 +11,15 @@
     "dev:api": "npm run dev --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspace=apps/api && npm run build --workspace=apps/web",
+    "postinstall": "prisma generate",
     "test": "npm run test --workspace=apps/api",
     "seed": "npm run seed --workspace=apps/api"
   },
+  "dependencies": {
+    "@prisma/client": "^5.19.1"
+  },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "prisma": "^5.19.1"
   }
 }

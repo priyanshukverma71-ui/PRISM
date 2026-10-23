@@ -4,7 +4,7 @@
   "outputDirectory": "apps/web/dist",
   "functions": {
     "api/index.ts": {
-      "includeFiles": "prisma/prism.db"
+      "includeFiles": "prisma/**"
     }
   },
   "rewrites": [
