@@ -1,24 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
-  Globe,
+  LayoutDashboard,
   FolderGit2,
-  FlaskConical,
-  CalendarCheck,
   ShieldCheck,
+  Clock,
   Radar,
-  Bell,
-  History,
-  BarChart3,
-  BookOpen,
+  FlaskConical,
+  Users,
+  Sliders,
   ChevronLeft,
   ChevronRight,
   LogOut,
   UserCheck,
   Eye,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.js';
 import { apiRequest } from '../../lib/api.js';
+
+interface NavItem {
+  label: string;
+  path: string;
+  icon: any;
+  badge?: string;
+  count?: number;
+}
+
+interface NavGroup {
+  group: string;
+  items: NavItem[];
+}
 
 export function AppLayout() {
   const { user, logout, switchRole, reducedMotion, toggleReducedMotion } = useAuth();
@@ -60,17 +72,36 @@ export function AppLayout() {
     return () => clearInterval(poll);
   }, [location.pathname]);
 
-  const navItems = [
-    { label: '3D Spatial Holodeck', path: '/dashboard', icon: Globe },
-    { label: 'Case Dossiers', path: '/applications', icon: FolderGit2 },
-    { label: 'FutureLab Sim', path: '/futurelab', icon: FlaskConical, badge: '4D' },
-    { label: 'EVC Workspace', path: '/evc', icon: CalendarCheck },
-    { label: 'Compliance Vault', path: '/compliance', icon: ShieldCheck },
-    { label: 'Risk Radar', path: '/risk-radar', icon: Radar },
-    { label: 'Flight Recorder', path: '/audit', icon: History },
-    { label: 'Alerts', path: '/alerts', icon: Bell, count: unresolvedAlertsCount },
-    { label: 'Rule Compiler', path: '/rules', icon: BookOpen },
-    { label: 'Analytics', path: '/reports', icon: BarChart3 },
+  // Reduced navigation overload: exactly 4 clear groups
+  const navGroups: NavGroup[] = [
+    {
+      group: 'Workspace',
+      items: [
+        { label: 'Overview', path: '/dashboard', icon: LayoutDashboard },
+        { label: 'Applications', path: '/applications', icon: FolderGit2 },
+      ],
+    },
+    {
+      group: 'Compliance',
+      items: [
+        { label: 'Obligations', path: '/compliance', icon: ShieldCheck },
+        { label: 'Deadlines', path: '/deadlines', icon: Clock },
+      ],
+    },
+    {
+      group: 'Intelligence',
+      items: [
+        { label: 'Risk Radar', path: '/risk-radar', icon: Radar },
+        { label: 'FUTURELAB', path: '/futurelab', icon: FlaskConical, badge: '4D' },
+      ],
+    },
+    {
+      group: 'Administration',
+      items: [
+        { label: 'Team', path: '/team', icon: Users },
+        { label: 'Settings', path: '/settings', icon: Sliders },
+      ],
+    },
   ];
 
   const handleRoleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -131,37 +162,52 @@ export function AppLayout() {
           </button>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  isActive
-                    ? 'bg-gunmetal text-silver-bright border border-platinum/30 shadow-platinum'
-                    : 'text-slate-muted hover:text-silver hover:bg-graphite-hover'
-                }`}
-                title={collapsed ? item.label : undefined}
-              >
-                <Icon size={17} className={isActive ? 'text-platinum' : 'text-slate-muted'} />
-                {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
-                {!collapsed && item.badge && (
-                  <span className="px-1.5 py-0.5 text-[9px] font-mono font-semibold bg-platinum/20 text-platinum rounded">
-                    {item.badge}
-                  </span>
-                )}
-                {!collapsed && item.count !== undefined && item.count > 0 && (
-                  <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-status-critical/20 text-status-critical border border-status-critical/40 rounded-full">
-                    {item.count}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+        {/* Grouped Navigation Items */}
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+          {navGroups.map((group, groupIdx) => (
+            <div key={group.group} className="space-y-1">
+              {!collapsed ? (
+                <div className="px-3 pt-1 pb-1 text-[9px] font-mono uppercase tracking-wider text-slate-muted font-bold">
+                  {group.group}
+                </div>
+              ) : (
+                groupIdx > 0 && <div className="border-t border-graphite-border/70 my-2 mx-1" />
+              )}
+
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  location.pathname === item.path ||
+                  (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-gunmetal text-silver-bright border border-platinum/40 shadow-platinum'
+                        : 'text-slate-muted hover:text-silver hover:bg-graphite-hover'
+                    }`}
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <Icon size={16} className={isActive ? 'text-platinum' : 'text-slate-muted'} />
+                    {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                    {!collapsed && item.badge && (
+                      <span className="px-1.5 py-0.5 text-[9px] font-mono font-semibold bg-platinum/20 text-platinum rounded">
+                        {item.badge}
+                      </span>
+                    )}
+                    {!collapsed && item.count !== undefined && item.count > 0 && (
+                      <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-status-critical/20 text-status-critical border border-status-critical/40 rounded-full">
+                        {item.count}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Sidebar Footer / User Profile */}
@@ -204,7 +250,7 @@ export function AppLayout() {
         <header className="h-16 border-b border-graphite-border bg-graphite/60 backdrop-blur-md px-6 flex items-center justify-between z-20">
           <div className="flex items-center gap-4">
             <h1 className="text-sm font-semibold tracking-wide text-silver-bright uppercase font-mono">
-              PRISM <span className="text-slate-muted font-normal">| Spatial Regulatory Intelligence Holodeck</span>
+              PRISM <span className="text-slate-muted font-normal">| Approval &amp; Compliance Intelligence</span>
             </h1>
           </div>
 
@@ -270,4 +316,5 @@ export function AppLayout() {
     </div>
   );
 }
+
 export default AppLayout;

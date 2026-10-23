@@ -15,6 +15,8 @@ import { FutureLabPage } from './pages/FutureLabPage.js';
 import { EVCPage } from './pages/EVCPage.js';
 import { CompliancePage } from './pages/CompliancePage.js';
 import { DocumentsPage } from './pages/DocumentsPage.js';
+import { DeadlinesPage } from './pages/DeadlinesPage.js';
+import { TeamPage } from './pages/TeamPage.js';
 import { RiskRadarPage } from './pages/RiskRadarPage.js';
 import { AlertsPage } from './pages/AlertsPage.js';
 import { AuditPage } from './pages/AuditPage.js';
@@ -75,12 +77,14 @@ export function App() {
               <Route path="futurelab" element={<FutureLabPage />} />
               <Route path="evc" element={<EVCPage />} />
               <Route path="compliance" element={<CompliancePage />} />
+              <Route path="deadlines" element={<DeadlinesPage />} />
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="risk-radar" element={<RiskRadarPage />} />
               <Route path="alerts" element={<AlertsPage />} />
               <Route path="audit" element={<AuditPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="rules" element={<RuleCompilerPage />} />
+              <Route path="team" element={<TeamPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
 

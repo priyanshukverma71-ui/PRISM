@@ -142,6 +142,32 @@ router.get('/me', authenticate, async (req: Request, res: Response, next) => {
   }
 });
 
+router.get('/users', authenticate, async (req: Request, res: Response, next) => {
+  try {
+    const users = await prisma.user.findMany({
+      include: { institution: { select: { id: true, name: true, code: true, region: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return res.json({
+      success: true,
+      data: users.map((u) => ({
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        region: u.region,
+        status: u.status,
+        institutionName: u.institution?.name,
+        institutionCode: u.institution?.code,
+        createdAt: u.createdAt,
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Demo switch role helper: allows quick switching between seeded demo roles for testing/demonstration
 router.post('/switch-demo-role', async (req: Request, res: Response, next) => {
   try {
