@@ -70,7 +70,7 @@ export function HoloDossierDrawer({
         <div>
           <h4 className="text-sm font-semibold text-silver">{node.institutionName}</h4>
           <span className="text-xs font-mono text-slate-muted">
-            {node.region} Region • Stage: {node.stage.replace(/_/g, ' ')}
+            {node.region} Region • Stage: {(node.stage || '').replace(/_/g, ' ')}
           </span>
         </div>
 

@@ -54,7 +54,7 @@ export function ReportsPage() {
   }
 
   const stageData = (analytics?.stagePendency || []).map((s: any) => ({
-    name: s.stage.replace(/_/g, ' '),
+    name: (s.stage || '').replace(/_/g, ' '),
     count: s.count,
   }));
 

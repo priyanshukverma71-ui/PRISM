@@ -124,18 +124,21 @@ router.get('/me', authenticate, async (req: Request, res: Response, next) => {
       return res.status(404).json({ success: false, error: 'User record not found' });
     }
 
+    const userObj = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      institutionId: user.institutionId,
+      institutionName: user.institution?.name,
+      institutionCode: user.institution?.code,
+      region: user.region,
+    };
+
     return res.json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        institutionId: user.institutionId,
-        institutionName: user.institution?.name,
-        institutionCode: user.institution?.code,
-        region: user.region,
-      },
+      data: userObj,
+      user: userObj,
     });
   } catch (error) {
     next(error);

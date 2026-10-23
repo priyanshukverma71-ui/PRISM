@@ -104,7 +104,7 @@ export function TeamPage() {
                   : 'text-slate-muted hover:text-silver'
               }`}
             >
-              {role === 'ALL' ? 'All Roles' : role.replace(/_/g, ' ')}
+              {role === 'ALL' ? 'All Roles' : String(role).replace(/_/g, ' ')}
             </button>
           )
         )}
@@ -151,7 +151,7 @@ export function TeamPage() {
                 </div>
 
                 <span className={`text-[10px] px-2 py-0.5 rounded border font-mono font-bold ${getRoleBadge(u.role)}`}>
-                  {u.role.replace(/_/g, ' ')}
+                  {u.role ? u.role.replace(/_/g, ' ') : 'MEMBER'}
                 </span>
               </div>
 

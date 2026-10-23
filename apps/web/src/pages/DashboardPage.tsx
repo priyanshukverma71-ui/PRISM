@@ -268,7 +268,7 @@ export function DashboardPage() {
   })();
 
   const stageChartData = Object.entries(summary?.stageBreakdown || {}).map(([stage, count]) => ({
-    stage: stage.replace(/_/g, ' '),
+    stage: (stage || '').replace(/_/g, ' '),
     count,
   }));
 
@@ -289,7 +289,9 @@ export function DashboardPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-muted">
-                {user ? `${user.name} • ${user.role.replace(/_/g, ' ')}` : 'Approval & Compliance Intelligence'}
+                {user?.name && user?.role
+                  ? `${user.name} • ${String(user.role).replace(/_/g, ' ')}`
+                  : user?.name || 'Approval & Compliance Intelligence'}
               </p>
             </div>
           </div>
@@ -625,7 +627,7 @@ export function DashboardPage() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-gunmetal text-silver border border-graphite-border">
-                          {app.currentStage.replace(/_/g, ' ')}
+                          {(app.currentStage || 'UNDER_REVIEW').replace(/_/g, ' ')}
                         </span>
                         <span className="text-[10px] font-mono font-bold text-status-warning">
                           {daysLeft} days to statutory cutoff

@@ -217,7 +217,7 @@ export function AppLayout() {
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase font-mono tracking-wider text-slate-muted">Identity</span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded border font-mono ${getRoleBadgeStyle(user?.role)}`}>
-                  {user?.role?.replace('_', ' ')}
+                  {user?.role ? String(user.role).replace(/_/g, ' ') : 'USER'}
                 </span>
               </div>
               <div className="truncate">

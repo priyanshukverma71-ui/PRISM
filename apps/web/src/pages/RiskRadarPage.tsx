@@ -114,7 +114,7 @@ export function RiskRadarPage() {
                         SCORE: {app.riskScore} / 100 [{app.riskCategory}]
                       </span>
                       <span className="text-[10px] font-mono text-slate-muted">
-                        Stage: {app.currentStage.replace(/_/g, ' ')}
+                        Stage: {(app.currentStage || '').replace(/_/g, ' ')}
                       </span>
                     </div>
 

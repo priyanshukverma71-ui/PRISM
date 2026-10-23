@@ -244,7 +244,7 @@ export function WorkflowMapPage() {
             <div className="flex flex-wrap gap-1.5">
               {selectedNode.roles.map((r) => (
                 <span key={r} className="px-2 py-0.5 rounded text-[10px] font-mono bg-gunmetal border border-graphite-border text-platinum">
-                  {r.replace('_', ' ')}
+                  {(r || '').replace(/_/g, ' ')}
                 </span>
               ))}
             </div>

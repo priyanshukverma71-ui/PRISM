@@ -192,11 +192,11 @@ export function ApplicationsPage() {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-[11px] text-slate-muted">
-                      {app.category.replace(/_/g, ' ')}
+                      {(app.category || '').replace(/_/g, ' ')}
                     </td>
                     <td className="py-3.5 px-4">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium border ${getStageBadgeColor(app.currentStage)}`}>
-                        {app.currentStage.replace(/_/g, ' ')}
+                        {(app.currentStage || '').replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-[11px]">

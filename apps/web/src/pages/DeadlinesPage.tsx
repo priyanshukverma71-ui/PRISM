@@ -73,7 +73,7 @@ export function DeadlinesPage() {
         institution: doc.institution?.name || 'Institution',
         targetDate: doc.expiryDate,
         daysRemaining: diff,
-        category: doc.category.replace(/_/g, ' '),
+        category: (doc.category || 'General').replace(/_/g, ' '),
         actionUrl: '/documents',
         actionLabel: 'Inspect & Renew',
       });
@@ -105,7 +105,7 @@ export function DeadlinesPage() {
       allDeadlines.push({
         id: `app-${app.id}`,
         type: 'STAGE_DETERMINATION',
-        title: `${app.currentStage.replace(/_/g, ' ')} Statutory Cutoff`,
+        title: `${(app.currentStage || 'Application').replace(/_/g, ' ')} Statutory Cutoff`,
         institution: app.institution?.name || 'Institution',
         targetDate: app.deadlineDate,
         daysRemaining: diff,

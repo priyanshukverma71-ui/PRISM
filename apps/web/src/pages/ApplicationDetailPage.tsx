@@ -167,7 +167,7 @@ export function ApplicationDetailPage() {
             <div className="flex items-center gap-2">
               <span className="font-mono text-lg font-bold text-silver-bright">{app.applicationNumber}</span>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-gunmetal border border-graphite-border text-platinum">
-                {app.category.replace(/_/g, ' ')}
+                {(app.category || '').replace(/_/g, ' ')}
               </span>
               <span
                 className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
@@ -231,7 +231,7 @@ export function ApplicationDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="platinum-card p-3 rounded-lg border border-graphite-border">
           <span className="text-[10px] font-mono text-slate-muted uppercase">Processing Stage</span>
-          <p className="text-sm font-bold text-silver-bright font-mono mt-0.5">{app.currentStage.replace(/_/g, ' ')}</p>
+          <p className="text-sm font-bold text-silver-bright font-mono mt-0.5">{(app.currentStage || '').replace(/_/g, ' ')}</p>
         </div>
         <div className="platinum-card p-3 rounded-lg border border-graphite-border">
           <span className="text-[10px] font-mono text-slate-muted uppercase">Stage SLA Deadline</span>

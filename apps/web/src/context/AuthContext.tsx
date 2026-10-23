@@ -48,8 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       try {
-        const userData = await apiRequest<User>('/auth/me');
-        setUser(userData);
+        const res = await apiRequest<any>('/auth/me');
+        const actualUser = res?.user || res?.data || res;
+        setUser(actualUser);
       } catch (err) {
         console.warn('Session expired or invalid, clearing credentials.');
         localStorage.removeItem('prism_token');
